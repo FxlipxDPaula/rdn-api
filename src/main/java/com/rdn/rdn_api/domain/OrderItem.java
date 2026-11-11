@@ -6,9 +6,10 @@ import java.util.UUID;
 /**
  * Item de um pedido.
  *
- * <p>POJO de dominio: apenas campos, construtores, getters/setters e o calculo
- * trivial de subtotal. Nao contem anotacoes de persistencia nem regras de
- * negocio (sem validacoes e sem excecoes de dominio).</p>
+ * <p>POJO de dominio: campos, construtores, getters/setters e o calculo de
+ * subtotal. Nao contem anotacoes de persistencia. O unico invariante protegido
+ * e a quantidade positiva, exigido para que o pedido nao aceite item zerado ou
+ * negativo.</p>
  */
 public class OrderItem {
 
@@ -36,10 +37,11 @@ public class OrderItem {
      *
      * @param menuItem produto do cardapio
      * @param quantity quantidade desejada
+     * @throws IllegalArgumentException quando a quantidade nao for positiva
      */
     public OrderItem(MenuItem menuItem, Integer quantity) {
         this.menuItem = menuItem;
-        this.quantity = quantity;
+        this.quantity = requirePositiveQuantity(quantity);
     }
 
     /**
@@ -77,8 +79,22 @@ public class OrderItem {
         return quantity;
     }
 
+    /**
+     * Define a quantidade do item.
+     *
+     * @param quantity quantidade desejada
+     * @throws IllegalArgumentException quando a quantidade nao for positiva
+     */
     public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
+        this.quantity = requirePositiveQuantity(quantity);
+    }
+
+    private static Integer requirePositiveQuantity(Integer quantity) {
+        if (quantity == null || quantity <= 0) {
+            throw new IllegalArgumentException("quantity deve ser maior que zero");
+        }
+
+        return quantity;
     }
 
     public BigDecimal getUnitPrice() {

@@ -6,11 +6,15 @@ import java.util.UUID;
 /**
  * Estoque de um item de cardapio em uma filial.
  *
- * <p>POJO de dominio: apenas campos, construtor padrao, getters/setters e
- * operacoes triviais de soma e subtracao de saldo. Nao contem anotacoes de
- * persistencia nem regras de negocio (sem validacoes e sem excecoes de
- * dominio). O parametro {@code reason} e aceito para uso futuro, mas nao e
- * armazenado aqui: o registro do motivo pertence a {@link InventoryMovement}.</p>
+ * <p>POJO de dominio: campos, construtor padrao, getters/setters e as regras
+ * que protegem o saldo. Nao contem anotacoes de persistencia e nao lanca
+ * excecoes: operacoes de saldo recusadas retornam {@code false}. O parametro
+ * {@code reason} e aceito para uso futuro, mas nao e armazenado aqui: o
+ * registro do motivo pertence a {@link InventoryMovement}.</p>
+ *
+ * <p>Invariante: o saldo nunca fica negativo. Uma saida maior que o saldo
+ * disponivel e recusada, o que permite a camada de aplicacao responder conflito
+ * de regra de negocio (estoque insuficiente) sem depender do banco.</p>
  */
 public class InventoryItem {
 
@@ -32,25 +36,42 @@ public class InventoryItem {
      *
      * @param quantity quantidade a ser adicionada
      * @param reason   motivo da entrada
+     * @return {@code true} quando o saldo foi atualizado, {@code false} quando a
+     *         quantidade e nula ou nao positiva
      */
-    public void addStock(BigDecimal quantity, String reason) {
-        if (quantity == null) {
-            return;
+    public Boolean addStock(BigDecimal quantity, String reason) {
+        if (quantity == null || quantity.signum() <= 0) {
+            return Boolean.FALSE;
         }
+
         quantityOnHand = (quantityOnHand == null ? BigDecimal.ZERO : quantityOnHand).add(quantity);
+        return Boolean.TRUE;
     }
 
     /**
      * Deduz quantidade do saldo em estoque.
      *
+     * <p>A deducao e recusada quando a quantidade nao for positiva ou quando
+     * exceder o saldo disponivel, garantindo o invariante de saldo nao
+     * negativo.</p>
+     *
      * @param quantity quantidade a ser retirada
      * @param reason   motivo da saida
+     * @return {@code true} quando o saldo foi atualizado, {@code false} quando a
+     *         quantidade e invalida ou superior ao saldo
      */
-    public void deductStock(BigDecimal quantity, String reason) {
-        if (quantity == null) {
-            return;
+    public Boolean deductStock(BigDecimal quantity, String reason) {
+        if (quantity == null || quantity.signum() <= 0) {
+            return Boolean.FALSE;
         }
-        quantityOnHand = (quantityOnHand == null ? BigDecimal.ZERO : quantityOnHand).subtract(quantity);
+
+        BigDecimal current = quantityOnHand == null ? BigDecimal.ZERO : quantityOnHand;
+        if (current.compareTo(quantity) < 0) {
+            return Boolean.FALSE;
+        }
+
+        quantityOnHand = current.subtract(quantity);
+        return Boolean.TRUE;
     }
 
     /**

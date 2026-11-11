@@ -4,15 +4,18 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
  * Pedido de uma filial.
  *
- * <p>POJO de dominio: apenas campos, construtor padrao, getters/setters e
- * operacoes triviais de manipulacao da lista de itens. Nao contem anotacoes de
- * persistencia nem regras de negocio (sem validacoes, sem invariantes e sem
- * excecoes de dominio).</p>
+ * <p>POJO de dominio: campos, construtor padrao, getters/setters e as regras
+ * que protegem os invariantes do pedido. Nao contem anotacoes de persistencia.
+ * As unicas excecoes lancadas sao de invariante violado
+ * ({@link IllegalArgumentException} para entrada invalida e
+ * {@link IllegalStateException} para transicao de status nao permitida).</p>
  *
  * <p>Premissa assumida: {@link OrderItem} expoe o construtor
  * {@code OrderItem(MenuItem, Integer)}, o getter {@code getId()} e o metodo
@@ -39,6 +42,20 @@ public class Order {
     private List<OrderItem> items = new ArrayList<>();
 
     private String cancellationReason;
+
+    private String idempotencyKey;
+
+    /**
+     * Transicoes de status permitidas. {@link OrderStatus#DELIVERED} e
+     * {@link OrderStatus#CANCELLED} sao estados finais e nao possuem saida.
+     */
+    private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED_TRANSITIONS =
+            Map.of(
+                    OrderStatus.RECEIVED, Set.of(OrderStatus.PREPARING, OrderStatus.CANCELLED),
+                    OrderStatus.PREPARING, Set.of(OrderStatus.READY, OrderStatus.CANCELLED),
+                    OrderStatus.READY, Set.of(OrderStatus.DELIVERED, OrderStatus.CANCELLED),
+                    OrderStatus.DELIVERED, Set.of(),
+                    OrderStatus.CANCELLED, Set.of());
 
     public Order() {
     }
@@ -81,16 +98,47 @@ public class Order {
         }
 
         BigDecimal discount = discountAmount == null ? BigDecimal.ZERO : discountAmount;
+        if (discount.signum() < 0) {
+            discount = BigDecimal.ZERO;
+        }
+        if (discount.compareTo(sum) > 0) {
+            discount = sum;
+        }
+
         totalAmount = sum.subtract(discount);
         return totalAmount;
     }
 
     /**
-     * Atualiza a situacao do pedido.
+     * Aplica a transicao de status validando a maquina de estados do pedido.
+     *
+     * <p>Fluxo permitido: {@code RECEIVED -> PREPARING -> READY -> DELIVERED}.
+     * A partir de qualquer estado nao final tambem e permitido cancelar. Um
+     * pedido ainda sem status so pode ser iniciado em
+     * {@link OrderStatus#RECEIVED}.</p>
      *
      * @param newStatus nova situacao
+     * @throws IllegalArgumentException quando {@code newStatus} for nulo
+     * @throws IllegalStateException    quando a transicao nao for permitida
      */
-    public void updateStatus(OrderStatus newStatus) {
+    public void changeStatus(OrderStatus newStatus) {
+        if (newStatus == null) {
+            throw new IllegalArgumentException("status e obrigatorio");
+        }
+
+        if (status == null) {
+            if (OrderStatus.RECEIVED != newStatus) {
+                throw new IllegalStateException("pedido deve iniciar em RECEIVED");
+            }
+            this.status = newStatus;
+            return;
+        }
+
+        if (!ALLOWED_TRANSITIONS.getOrDefault(status, Set.of()).contains(newStatus)) {
+            throw new IllegalStateException(
+                    "transicao de " + status + " para " + newStatus + " nao permitida");
+        }
+
         this.status = newStatus;
     }
 
@@ -98,9 +146,10 @@ public class Order {
      * Cancela o pedido registrando o motivo informado.
      *
      * @param reason motivo do cancelamento
+     * @throws IllegalStateException quando o pedido ja estiver em estado final
      */
     public void cancel(String reason) {
-        this.status = OrderStatus.CANCELLED;
+        changeStatus(OrderStatus.CANCELLED);
         this.cancellationReason = reason;
     }
 
@@ -182,6 +231,14 @@ public class Order {
 
     public void setCancellationReason(String cancellationReason) {
         this.cancellationReason = cancellationReason;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 
 }

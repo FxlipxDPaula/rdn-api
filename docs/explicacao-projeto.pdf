@@ -1,0 +1,946 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 9 /Kids [7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Length 6046 >>
+stream
+0.05 0.24 0.36 rg BT /F2 20.00 Tf 1 0 0 1 50.00 766.00 Tm (Explicação do projeto rdn-api) Tj ET
+0.05 0.24 0.36 rg BT /F2 14.00 Tf 1 0 0 1 50.00 731.00 Tm (1. Resumo em 3 frases) Tj ET
+0.60 g 50.00 727.00 495.00 0.90 re f
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 710.40 Tm (O rdn-api é o back-end de uma rede de lanchonetes com múltiplos canais \(APP, TOTEM, BALCAO, PICKUP,) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 697.80 Tm (WEB\), construído em Spring Boot 4 / Java 25 com PostgreSQL e Flyway.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 685.20 Tm (Hoje ele tem duas camadas prontas: o domínio \(regras de pedido, pagamento, estoque, fidelidade\) e a) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 672.60 Tm (infraestrutura de persistência \(entidades JPA, mappers, repositórios, migrations e DER\).) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 660.00 Tm (Ainda não existe camada application nem api: o modelo grava e lê do banco com teste verde, mas nenhum) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 647.40 Tm (endpoint HTTP está exposto.) Tj ET
+0.05 0.24 0.36 rg BT /F2 14.00 Tf 1 0 0 1 50.00 616.40 Tm (2. Mapa mental) Tj ET
+0.60 g 50.00 612.40 495.00 0.90 re f
+0.08 0.29 0.42 rg BT /F2 11.60 Tf 1 0 0 1 50.00 584.40 Tm (O que existe e o que falta) Tj ET
+0.08 0.29 0.42 rg BT /F2 11.60 Tf 1 0 0 1 50.00 560.40 Tm (Caminho de dados real, quando o caso de uso existir) Tj ET
+0.05 0.24 0.36 rg BT /F2 14.00 Tf 1 0 0 1 50.00 529.40 Tm (3. Explicação por arquivo) Tj ET
+0.60 g 50.00 525.40 495.00 0.90 re f
+0.08 0.29 0.42 rg BT /F2 11.60 Tf 1 0 0 1 50.00 497.40 Tm (3.1 Order.java ? o agregado do pedido) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 484.80 Tm (src/main/java/com/rdn/rdn_api/domain/Order.java) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 472.20 Tm (É a raiz do agregado: quem manipula itens, total, status e cancelamento passa por aqui. Não conhece JPA, HTTP) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 459.60 Tm (nem banco; depende apenas de OrderItem, MenuItem, User, Branch e dos enums OrderStatus e SalesChannel.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 441.10 Tm (Fluxo de execução) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 428.50 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 428.50 Tm (O caso de uso cria Order, chama addItem\(\) para cada item e calculateTotal\(\).) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 415.90 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 415.90 Tm (changeStatus\(\) valida a transição antes de gravar o novo estado.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 403.30 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 403.30 Tm (cancel\(\) delega para changeStatus\(CANCELLED\) e só então grava o motivo.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 384.80 Tm (Anotações e imports que importam) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 372.20 Tm (Elemento) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 359.60 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 359.60 Tm (O que faz) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 347.00 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 347.00 Tm (Por que está aqui) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 331.40 Tm (Map / Set \(linhas 7-8\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 318.80 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 318.80 Tm (Estruturas imutáveis) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 306.20 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 306.20 Tm (ALLOWED_TRANSITIONS é constante de classe, montada uma vez) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 290.60 Tm (Nenhuma anotação JPA) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 278.00 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 278.00 Tm (Mantém o domínio puro) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 265.40 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 265.40 Tm (O mapeamento vive em OrderJpaEntity) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 249.80 Tm (BigDecimal \(linha 3\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 237.20 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 237.20 Tm (Precisão decimal) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 224.60 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 224.60 Tm (Dinheiro nunca deve usar double) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 203.10 Tm (Linha a linha) Tj ET
+0.45 g 51.00 189.90 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 189.90 Tm (private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED_TRANSITIONS = // \(1\)) Tj ET
+0.45 g 51.00 179.70 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 179.70 Tm (Map.of\() Tj ET
+0.45 g 51.00 169.50 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 169.50 Tm (OrderStatus.RECEIVED, Set.of\(OrderStatus.PREPARING, OrderStatus.CANCELLED\), // \(2\)) Tj ET
+0.45 g 51.00 159.30 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 159.30 Tm (OrderStatus.PREPARING, Set.of\(OrderStatus.READY, OrderStatus.CANCELLED\),) Tj ET
+0.45 g 51.00 149.10 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 149.10 Tm (OrderStatus.READY, Set.of\(OrderStatus.DELIVERED, OrderStatus.CANCELLED\),) Tj ET
+0.45 g 51.00 138.90 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 138.90 Tm (OrderStatus.DELIVERED, Set.of\(\), // \(3\)) Tj ET
+0.45 g 51.00 128.70 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 128.70 Tm (OrderStatus.CANCELLED, Set.of\(\)\);) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 112.10 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 112.10 Tm (static final porque a tabela de transições é a mesma para todo pedido ? não é estado de instância.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 99.50 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 99.50 Tm (Map.of + Set.of criam coleções imutáveis; qualquer tentativa de alterar em runtime lança) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 86.90 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 86.90 Tm (UnsupportedOperationException, o que protege a regra contra mutação acidental.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 74.30 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 74.30 Tm (Set.of\(\) vazio significa "estado final": DELIVERED e CANCELLED não têm saída.) Tj ET
+0.45 g BT /F1 8.00 Tf 1 0 0 1 231.02 34 Tm (rdn-api - Explicacao do projeto    1 / 9) Tj ET
+
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 8905 >>
+stream
+0.45 g 51.00 789.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 789.80 Tm (public BigDecimal calculateTotal\(\) {) Tj ET
+0.45 g 51.00 779.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 779.60 Tm (BigDecimal sum = BigDecimal.ZERO; // \(1\)) Tj ET
+0.45 g 51.00 769.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 769.40 Tm (for \(OrderItem orderItem : items\) {) Tj ET
+0.45 g 51.00 759.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 759.20 Tm (sum = sum.add\(orderItem.calculateSubtotal\(\)\);) Tj ET
+0.45 g 51.00 749.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 749.00 Tm (}) Tj ET
+0.45 g 51.00 738.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 738.80 Tm (BigDecimal discount = discountAmount == null ? BigDecimal.ZERO : discountAmount; // \(2\)) Tj ET
+0.45 g 51.00 728.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 728.60 Tm (if \(discount.signum\(\) < 0\) {) Tj ET
+0.45 g 51.00 718.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 718.40 Tm (discount = BigDecimal.ZERO;) Tj ET
+0.45 g 51.00 708.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 708.20 Tm (}) Tj ET
+0.45 g 51.00 698.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 698.00 Tm (if \(discount.compareTo\(sum\) > 0\) { // \(3\)) Tj ET
+0.45 g 51.00 687.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 687.80 Tm (discount = sum;) Tj ET
+0.45 g 51.00 677.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 677.60 Tm (}) Tj ET
+0.45 g 51.00 667.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 667.40 Tm (totalAmount = sum.subtract\(discount\);) Tj ET
+0.45 g 51.00 657.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 657.20 Tm (return totalAmount;) Tj ET
+0.45 g 51.00 647.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 647.00 Tm (}) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 630.40 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 630.40 Tm (BigDecimal é imutável: sum.add\(...\) devolve um novo objeto, por isso a reatribuição é obrigatória.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 617.80 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 617.80 Tm (Guarda contra null ? discountAmount é BigDecimal \(wrapper\), que aceita null, diferente de double.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 605.20 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 605.20 Tm (compareTo e não >: BigDecimal não deve ser comparado com operadores, porque 1.0 e 1.00 são equals) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 592.60 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 592.60 Tm (diferentes mas compareTo iguais. Aqui o objetivo é limitar o desconto à soma dos itens, garantindo total >= 0 ? o) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 580.00 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 580.00 Tm (que também protege a constraint ck_orders_total do banco.) Tj ET
+0.45 g 51.00 566.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 566.80 Tm (public void changeStatus\(OrderStatus newStatus\) {) Tj ET
+0.45 g 51.00 556.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 556.60 Tm (if \(newStatus == null\) {                                   // \(1\)) Tj ET
+0.45 g 51.00 546.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 546.40 Tm (throw new IllegalArgumentException\("status e obrigatorio"\);) Tj ET
+0.45 g 51.00 536.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 536.20 Tm (}) Tj ET
+0.45 g 51.00 526.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 526.00 Tm (if \(status == null\) {                                      // \(2\)) Tj ET
+0.45 g 51.00 515.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 515.80 Tm (if \(OrderStatus.RECEIVED != newStatus\) {) Tj ET
+0.45 g 51.00 505.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 505.60 Tm (throw new IllegalStateException\("pedido deve iniciar em RECEIVED"\);) Tj ET
+0.45 g 51.00 495.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 495.40 Tm (}) Tj ET
+0.45 g 51.00 485.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 485.20 Tm (this.status = newStatus;) Tj ET
+0.45 g 51.00 475.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 475.00 Tm (return;) Tj ET
+0.45 g 51.00 464.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 464.80 Tm (}) Tj ET
+0.45 g 51.00 454.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 454.60 Tm (if \(!ALLOWED_TRANSITIONS.getOrDefault\(status, Set.of\(\)\).contains\(newStatus\)\) { // \(3\)) Tj ET
+0.45 g 51.00 444.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 444.40 Tm (throw new IllegalStateException\() Tj ET
+0.45 g 51.00 434.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 434.20 Tm ("transicao de " + status + " para " + newStatus + " nao permitida"\);) Tj ET
+0.45 g 51.00 424.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 424.00 Tm (}) Tj ET
+0.45 g 51.00 413.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 413.80 Tm (this.status = newStatus;) Tj ET
+0.45 g 51.00 403.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 403.60 Tm (}) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 387.00 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 387.00 Tm (IllegalArgumentException para entrada inválida do chamador; IllegalStateException para estado atual) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 374.40 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 374.40 Tm (incompatível. Essa distinção permite à camada de API traduzir a primeira em 400/422 e a segunda em 409.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 361.80 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 361.80 Tm (Pedido recém-criado não tem status: só pode nascer em RECEIVED. Sem esse bloqueio, seria possível criar) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 349.20 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 349.20 Tm (pedido já DELIVERED.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 336.60 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 336.60 Tm (getOrDefault\(status, Set.of\(\)\) evita NullPointerException caso apareça um status fora do mapa \(ex.: enum novo) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 324.00 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 324.00 Tm (sem regra cadastrada\) ? nesse caso a transição é negada, que é o comportamento seguro.) Tj ET
+0.45 g 51.00 310.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 310.80 Tm (public void cancel\(String reason\) {) Tj ET
+0.45 g 51.00 300.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 300.60 Tm (changeStatus\(OrderStatus.CANCELLED\); // \(1\)) Tj ET
+0.45 g 51.00 290.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 290.40 Tm (this.cancellationReason = reason;   // \(2\)) Tj ET
+0.45 g 51.00 280.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 280.20 Tm (}) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 263.60 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 263.60 Tm (Delegar impede duplicação da regra: cancelar um pedido DELIVERED agora falha.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 251.00 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 251.00 Tm (O motivo só é gravado depois da validação; se a transição for negada, nada é alterado.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 232.50 Tm (Padrões aplicados) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 219.90 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 219.90 Tm (State machine: changeStatus \(linha 124\) com tabela declarativa de transições.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 207.30 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 207.30 Tm (Guard clause: if \(newStatus == null\) na linha 125.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 194.70 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 194.70 Tm (Rich domain model: regra dentro da entidade, não no service.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 182.10 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 182.10 Tm (Encapsulation: setStatus continua público \(linha 192\) apenas para reidratação por mapeadores ? é o ponto de) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 169.50 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 169.50 Tm (atenção número 1 do projeto.) Tj ET
+0.08 0.29 0.42 rg BT /F2 11.60 Tf 1 0 0 1 50.00 145.50 Tm (3.2 Payment.java ? a tentativa de pagamento) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 132.90 Tm (src/main/java/com/rdn/rdn_api/domain/Payment.java) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 120.30 Tm (Representa uma tentativa de cobrança no provedor simulado, não "o pagamento do pedido". Isso permite) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 107.70 Tm (histórico: pedido pode ter uma tentativa DECLINED e outra APPROVED. Não conhece JSON, HTTP nem) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 95.10 Tm (PaymentGateway.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 76.60 Tm (Fluxo de execução) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 64.00 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 64.00 Tm (Caso de uso cria Payment \(status nasce PENDING, requestedAt = agora\).) Tj ET
+0.45 g BT /F1 8.00 Tf 1 0 0 1 231.02 34 Tm (rdn-api - Explicacao do projeto    2 / 9) Tj ET
+
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 8117 >>
+stream
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 787.40 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 787.40 Tm (Chama o gateway mock e recebe um resultado.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 774.80 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 774.80 Tm (Converte o resultado em markApproved, markDeclined ou markFailed.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 756.30 Tm (Anotações e imports que importam) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 743.70 Tm (Elemento) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 731.10 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 731.10 Tm (O que faz) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 718.50 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 718.50 Tm (Por que está aqui) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 702.90 Tm (PaymentStatus status = PENDING \(linha 29\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 690.30 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 690.30 Tm (Estado inicial no campo) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 677.70 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 677.70 Tm (Mesmo via reflexão/JPA, um pagamento novo nunca nasce em estado final) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 662.10 Tm (BigDecimal \(linha 25\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 649.50 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 649.50 Tm (Valor monetário) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 636.90 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 636.90 Tm (Alinhado a NUMERIC\(10,2\) em payments.amount) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 621.30 Tm (LocalDateTime \(linhas 37-39\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 608.70 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 608.70 Tm (Marcas de tempo) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 596.10 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 596.10 Tm (Mapeia para TIMESTAMP sem timezone no Postgres) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 574.60 Tm (Linha a linha) Tj ET
+0.45 g 51.00 561.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 561.40 Tm (public Payment\(Order order, BigDecimal amount, PaymentMethod method, String idempotencyKey\) {) Tj ET
+0.45 g 51.00 551.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 551.20 Tm (if \(amount == null || amount.signum\(\) <= 0\) {                 // \(1\)) Tj ET
+0.45 g 51.00 541.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 541.00 Tm (throw new IllegalArgumentException\("amount deve ser positivo"\);) Tj ET
+0.45 g 51.00 530.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 530.80 Tm (}) Tj ET
+0.45 g 51.00 520.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 520.60 Tm (if \(idempotencyKey == null || idempotencyKey.isBlank\(\)\) {     // \(2\)) Tj ET
+0.45 g 51.00 510.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 510.40 Tm (throw new IllegalArgumentException\("idempotencyKey e obrigatoria"\);) Tj ET
+0.45 g 51.00 500.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 500.20 Tm (}) Tj ET
+0.45 g 51.00 490.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 490.00 Tm (this.order = order;) Tj ET
+0.45 g 51.00 479.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 479.80 Tm (this.amount = amount;) Tj ET
+0.45 g 51.00 469.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 469.60 Tm (this.method = method;) Tj ET
+0.45 g 51.00 459.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 459.40 Tm (this.idempotencyKey = idempotencyKey.trim\(\);                  // \(3\)) Tj ET
+0.45 g 51.00 449.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 449.20 Tm (this.status = PaymentStatus.PENDING;) Tj ET
+0.45 g 51.00 439.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 439.00 Tm (this.requestedAt = LocalDateTime.now\(\);) Tj ET
+0.45 g 51.00 428.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 428.80 Tm (}) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 412.20 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 412.20 Tm (signum\(\) devolve -1, 0 ou 1: é a forma idiomática de testar sinal de BigDecimal sem aritmética.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 399.60 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 399.60 Tm (isBlank\(\) cobre "" e " " ? diferente de isEmpty\(\), que aceitaria espaços.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 387.00 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 387.00 Tm (trim\(\) normaliza a chave antes de gravar, porque a coluna é UNIQUE: "abc" e "abc " precisam colidir, senão a) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 374.40 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 374.40 Tm (idempotência vaza.) Tj ET
+0.45 g 51.00 361.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 361.20 Tm (public void markApproved\(String transactionId, String rawResponse\) {) Tj ET
+0.45 g 51.00 351.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 351.00 Tm (requirePending\(\);                       // \(1\)) Tj ET
+0.45 g 51.00 340.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 340.80 Tm (this.status = PaymentStatus.APPROVED;) Tj ET
+0.45 g 51.00 330.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 330.60 Tm (this.gatewayTransactionId = transactionId;) Tj ET
+0.45 g 51.00 320.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 320.40 Tm (this.gatewayRawResponse = rawResponse;  // \(2\)) Tj ET
+0.45 g 51.00 310.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 310.20 Tm (this.processedAt = LocalDateTime.now\(\); // \(3\)) Tj ET
+0.45 g 51.00 300.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 300.00 Tm (}) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 283.40 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 283.40 Tm (Guarda centralizada: impede transformar APPROVED em DECLINED se o webhook chegar duas vezes.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 270.80 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 270.80 Tm (Guardar o payload bruto é requisito de auditoria: sem ele, não há como investigar divergência de valor depois.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 258.20 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 258.20 Tm (processedAt é preenchido apenas quando há resposta do provedor ? payments.processed_at é nullable) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 245.60 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 245.60 Tm (exatamente por isso.) Tj ET
+0.45 g 51.00 232.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 232.40 Tm (private void requirePending\(\) {) Tj ET
+0.45 g 51.00 222.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 222.20 Tm (if \(status != null && PaymentStatus.PENDING != status\) {) Tj ET
+0.45 g 51.00 212.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 212.00 Tm (throw new IllegalStateException\() Tj ET
+0.45 g 51.00 201.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 201.80 Tm ("pagamento ja finalizado com status " + status + " e nao pode ser alterado"\);) Tj ET
+0.45 g 51.00 191.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 191.60 Tm (}) Tj ET
+0.45 g 51.00 181.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 181.40 Tm (}) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 164.80 Tm (O status != null protege contra objeto reidratado sem status \(mapeador ou banco legado\); nesse caso, permitir a) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 152.20 Tm (transição é mais seguro do que estourar NullPointerException.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 133.70 Tm (Padrões aplicados) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 121.10 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 121.10 Tm (Factory por construtor com validação: Payment\(...\) \(linha 54\) garante que não existe pagamento inválido em) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 108.50 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 108.50 Tm (memória.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 95.90 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 95.90 Tm (Guard clause / template method privado: requirePending \(linha 129\) chamado pelos três métodos de transição.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 83.30 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 83.30 Tm (Estado explícito: status como campo, nunca derivado de "processado ou não".) Tj ET
+0.45 g BT /F1 8.00 Tf 1 0 0 1 231.02 34 Tm (rdn-api - Explicacao do projeto    3 / 9) Tj ET
+
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 7556 >>
+stream
+0.08 0.29 0.42 rg BT /F2 11.60 Tf 1 0 0 1 50.00 786.00 Tm (3.3 OrderJpaEntity.java ? a tradução relacional) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 773.40 Tm (src/main/java/com/rdn/rdn_api/infrastructure/persistence/entity/OrderJpaEntity.java) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 760.80 Tm (Existe porque Order não tem anotação JPA. Aqui ficam @Entity, @Column, @Table e as associações. Quem) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 748.20 Tm (depende dele é o repositório e o OrderMapper.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 729.70 Tm (Fluxo de execução) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 717.10 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 717.10 Tm (OrderMapper.copyScalarsToEntity\(\) copia campos simples.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 704.50 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 704.50 Tm (O adaptador resolve customer, branch e menuItem \(associações\) via repositórios.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 691.90 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 691.90 Tm (OrderJpaRepository.save\(\) persiste a árvore, em cascata para os itens.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 673.40 Tm (Anotações e imports que importam) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 660.80 Tm (Anotação) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 648.20 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 648.20 Tm (O que faz) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 635.60 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 635.60 Tm (Por que está aqui) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 620.00 Tm (@Entity + @Table\(name = "orders"\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 607.40 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 607.40 Tm (Liga a classe à tabela) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 594.80 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 594.80 Tm (Nome explícito evita depender da convenção) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 579.20 Tm (@GeneratedValue\(strategy = GenerationType.UUID\) \(linha 38\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 566.60 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 566.60 Tm (Gera o UUID no cliente) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 554.00 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 554.00 Tm (Não exige sequence nem gen_random_uuid\(\) do Postgres ? funciona em H2 também) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 538.40 Tm (@Enumerated\(EnumType.STRING\) \(linhas 50, 54\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 525.80 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 525.80 Tm (Salva o nome do enum) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 513.20 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 513.20 Tm (ORDINAL salvaria 0,1,2... e quebraria se a ordem do enum mudasse) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 497.60 Tm (@ManyToOne\(fetch = LAZY\) \(linhas 42, 46\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 485.00 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 485.00 Tm (Carrega sob demanda) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 472.40 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 472.40 Tm (Evita buscar cliente e filial em toda listagem de pedidos) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 456.80 Tm (@OneToMany\(mappedBy, cascade = ALL, orphanRemoval = true\) \(linha 73\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 444.20 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 444.20 Tm (Um-para-muitos pelo lado inverso) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 431.60 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 431.60 Tm (mappedBy diz que a FK está em order_items.order_id; cascata salva os itens junto) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 416.00 Tm (precision = 10, scale = 2 \(linhas 58-62\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 403.40 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 403.40 Tm (Diz ao Hibernate NUMERIC\(10,2\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 390.80 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 390.80 Tm (Sem isso, ddl-auto=validate acusa divergência com o DDL) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 375.20 Tm (unique = true \(linha 70\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 362.60 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 362.60 Tm (Documenta a unicidade) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 350.00 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 350.00 Tm (O garantidor real é uk_orders_idempotency_key na migration) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 328.50 Tm (Linha a linha) Tj ET
+0.45 g 51.00 315.30 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 315.30 Tm (@ManyToOne\(fetch = FetchType.LAZY\)) Tj ET
+0.45 g 51.00 305.10 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 305.10 Tm (@JoinColumn\(name = "customer_id"\)) Tj ET
+0.45 g 51.00 294.90 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 294.90 Tm (private UserJpaEntity customer;   // \(1\)) Tj ET
+0.45 g 51.00 284.70 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 284.70 Tm (@ManyToOne\(optional = false, fetch = FetchType.LAZY\)) Tj ET
+0.45 g 51.00 274.50 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 274.50 Tm (@JoinColumn\(name = "branch_id", nullable = false\)) Tj ET
+0.45 g 51.00 264.30 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 264.30 Tm (private BranchJpaEntity branch;   // \(2\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 247.70 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 247.70 Tm (Sem optional = false, o cliente é opcional ? pedido de totem pode não ter usuário identificado.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 235.10 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 235.10 Tm (Filial é obrigatória: pedido sem unidade não existe no domínio de uma rede de lanchonetes, e a FK garante isso) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 222.50 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 222.50 Tm (no banco.) Tj ET
+0.45 g 51.00 209.30 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 209.30 Tm (@OneToMany\(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true,) Tj ET
+0.45 g 51.00 199.10 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 199.10 Tm (fetch = FetchType.LAZY\)) Tj ET
+0.45 g 51.00 188.90 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 188.90 Tm (private List<OrderItemJpaEntity> items = new ArrayList<>\(\); // \(1\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 172.30 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 172.30 Tm (Três decisões em uma linha: inicializar com new ArrayList<>\(\) evita NullPointerException no add antes do) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 159.70 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 159.70 Tm (carregamento; cascade = ALL faz save\(order\) salvar os itens; orphanRemoval = true remove do banco o item) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 147.10 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 147.10 Tm (retirado da lista ? sem isso, order.getItems\(\).remove\(x\) não geraria DELETE.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 128.60 Tm (Padrões aplicados) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 116.00 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 116.00 Tm (Persistence Entity separada do Domínio \(linha 35\).) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 103.40 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 103.40 Tm (Lazy loading + @EntityGraph no repositório para o caso de leitura.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 90.80 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 90.80 Tm (Cascade + orphanRemoval como unidade de trabalho do agregado \(linha 73\).) Tj ET
+0.08 0.29 0.42 rg BT /F2 11.60 Tf 1 0 0 1 50.00 66.80 Tm (3.4 V1__schema.sql ? o contrato do banco) Tj ET
+0.45 g BT /F1 8.00 Tf 1 0 0 1 231.02 34 Tm (rdn-api - Explicacao do projeto    4 / 9) Tj ET
+
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 8845 >>
+stream
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 787.40 Tm (src/main/resources/db/migration/V1__schema.sql) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 774.80 Tm (É a fonte de verdade do schema: ddl-auto=validate confere se o mapeamento JPA bate com este DDL, mas nunca) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 762.20 Tm (cria tabela. É versionado porque V1 roda uma única vez no histórico do Flyway.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 743.70 Tm (Fluxo de execução) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 731.10 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 731.10 Tm (A aplicação sobe e o Flyway lê db/migration.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 718.50 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 718.50 Tm (Executa V1 \(schema\) e depois V2 \(seed\) na ordem numérica.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 705.90 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 705.90 Tm (Grava o histórico em flyway_schema_history; se V1 já rodou, não roda de novo.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 687.40 Tm (Linha a linha) Tj ET
+0.45 g 51.00 674.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 674.20 Tm (CONSTRAINT pk_orders PRIMARY KEY \(id\),) Tj ET
+0.45 g 51.00 664.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 664.00 Tm (CONSTRAINT uk_orders_idempotency_key UNIQUE \(idempotency_key\),   -- \(1\)) Tj ET
+0.45 g 51.00 653.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 653.80 Tm (CONSTRAINT fk_orders_customer FOREIGN KEY \(customer_id\) REFERENCES users \(id\),) Tj ET
+0.45 g 51.00 643.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 643.60 Tm (CONSTRAINT fk_orders_branch FOREIGN KEY \(branch_id\) REFERENCES branches \(id\),) Tj ET
+0.45 g 51.00 633.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 633.40 Tm (CONSTRAINT ck_orders_channel CHECK \(origin_channel IN \('APP', 'TOTEM', 'BALCAO', 'PICKUP', 'WEB'\)) Tj ET
+0.45 g 51.00 623.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 623.20 Tm (\), -- \(2\)) Tj ET
+0.45 g 51.00 613.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 613.00 Tm (CONSTRAINT ck_orders_status CHECK \(status IN \('RECEIVED', 'PREPARING', 'READY', 'DELIVERED', 'CAN) Tj ET
+0.45 g 51.00 602.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 602.80 Tm (CELLED'\)\),) Tj ET
+0.45 g 51.00 592.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 592.60 Tm (CONSTRAINT ck_orders_total CHECK \(total_amount >= 0\),             -- \(3\)) Tj ET
+0.45 g 51.00 582.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 582.40 Tm (CONSTRAINT ck_orders_discount CHECK \(discount_amount >= 0\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 565.80 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 565.80 Tm (UNIQUE em NULL é permitido no SQL \(vários pedidos com chave nula\); a unicidade só vale para valores) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 553.20 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 553.20 Tm (preenchidos. É o que queremos: nem todo pedido tem chave de idempotência mandada pelo cliente.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 540.60 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 540.60 Tm (Repetir o enum no CHECK é redundância intencional: protege contra escrita direta no banco \(script, DBA, outro) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 528.00 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 528.00 Tm (serviço\) que não passou pelo Java.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 515.40 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 515.40 Tm (O CHECK é a última linha de defesa do invariante que calculateTotal\(\) já garante ? se alguém inserir) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 502.80 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 502.80 Tm (manualmente um total negativo, o banco recusa.) Tj ET
+0.45 g 51.00 489.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 489.60 Tm (CONSTRAINT fk_order_items_order FOREIGN KEY \(order_id\) REFERENCES orders \(id\) ON DELETE CASCADE, ) Tj ET
+0.45 g 51.00 479.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 479.40 Tm (-- \(1\)) Tj ET
+0.45 g 51.00 469.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 469.20 Tm (CONSTRAINT ck_order_items_quantity CHECK \(quantity > 0\),   -- \(2\)) Tj ET
+0.45 g 51.00 459.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 459.00 Tm (CONSTRAINT ck_order_items_unit_price CHECK \(unit_price >= 0\),) Tj ET
+0.45 g 51.00 448.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 448.80 Tm (CONSTRAINT ck_order_items_subtotal CHECK \(subtotal >= 0\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 432.20 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 432.20 Tm (ON DELETE CASCADE no banco + orphanRemoval no JPA cobrem caminhos diferentes: JPA apaga quando o) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 419.60 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 419.60 Tm (objeto sai da lista, o banco apaga quando o pedido é deletado por SQL.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 407.00 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 407.00 Tm (quantity > 0 espelha a validação de OrderItem: item com quantidade zero geraria linha de pedido sem sentido) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 394.40 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 394.40 Tm (contábil.) Tj ET
+0.45 g 51.00 381.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 381.20 Tm (CREATE TABLE payments \() Tj ET
+0.45 g 51.00 371.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 371.00 Tm (...) Tj ET
+0.45 g 51.00 360.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 360.80 Tm (idempotency_key VARCHAR\(80\) NOT NULL,     -- \(1\)) Tj ET
+0.45 g 51.00 350.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 350.60 Tm (requested_at TIMESTAMP NOT NULL,) Tj ET
+0.45 g 51.00 340.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 340.40 Tm (processed_at TIMESTAMP,) Tj ET
+0.45 g 51.00 330.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 330.20 Tm (CONSTRAINT uk_payments_idempotency_key UNIQUE \(idempotency_key\),) Tj ET
+0.45 g 51.00 320.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 320.00 Tm (CONSTRAINT ck_payments_amount CHECK \(amount > 0\)) Tj ET
+0.45 g 51.00 309.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 309.80 Tm (\);) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 293.20 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 293.20 Tm (Aqui a chave é NOT NULL \(diferente de orders\), porque toda tentativa de pagamento precisa ser idempotente ?) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 280.60 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 280.60 Tm (repetir a chamada ao gateway não pode gerar duas cobranças.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 268.00 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 268.00 Tm (TIMESTAMP sem timezone, não TIMESTAMPTZ: o Hibernate mapeia LocalDateTime para timestamp por padrão.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 255.40 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 255.40 Tm (Usar timestamptz faria ddl-auto=validate falhar na inicialização.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 242.80 Tm (Índices \(linhas 108-111\): origin_channel, status, branch_id e created_at existem porque são exatamente os filtros) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 230.20 Tm (do roteiro \(?canalPedido=, status, unidade, período\). Índice sem consulta correspondente é custo de escrita sem) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 217.60 Tm (retorno.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 199.10 Tm (Padrões aplicados) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 186.50 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 186.50 Tm (Versioned migrations \(Flyway\).) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 173.90 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 173.90 Tm (Constraint-driven design: PK, UK, FK e CHECK nomeados, o que facilita identificar a violação no log.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 161.30 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 161.30 Tm (Fail fast no banco como complemento, não substituto, da validação de domínio.) Tj ET
+0.08 0.29 0.42 rg BT /F2 11.60 Tf 1 0 0 1 50.00 137.30 Tm (3.5 OrderPersistenceIntegrationTest.java ? a prova de que persiste) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 124.70 Tm (src/test/java/com/rdn/rdn_api/infrastructure/repository/OrderPersistenceIntegrationTest.java) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 112.10 Tm (Testa a camada de persistência de verdade, não com mock de EntityManager. Usa H2 em modo PostgreSQL) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 99.50 Tm (porque Docker não existe nesta máquina.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 81.00 Tm (Fluxo de execução) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 68.40 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 68.40 Tm (@SpringBootTest sobe o contexto completo \(Flyway desativado no perfil de teste, schema gerado pelo Hibernate\).) Tj ET
+0.45 g BT /F1 8.00 Tf 1 0 0 1 231.02 34 Tm (rdn-api - Explicacao do projeto    5 / 9) Tj ET
+
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 7472 >>
+stream
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 787.40 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 787.40 Tm (O teste monta filial -> cardápio -> item -> estoque.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 774.80 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 774.80 Tm (Persiste pedido com item e um pagamento, limpa o cache, relê do banco e compara.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 756.30 Tm (Anotações e imports que importam) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 743.70 Tm (Anotação) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 731.10 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 731.10 Tm (O que faz) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 718.50 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 718.50 Tm (Por que está aqui) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 702.90 Tm (@SpringBootTest) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 690.30 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 690.30 Tm (Sobe contexto real) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 677.70 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 677.70 Tm (Quer testar JPA + repositórios juntos, não a classe isolada) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 662.10 Tm (@Transactional \(linha 47\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 649.50 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 649.50 Tm (Abre transação e faz rollback no fim) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 636.90 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 636.90 Tm (Cada teste deixa o banco limpo sem TRUNCATE manual) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 621.30 Tm (@Autowired) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 608.70 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 608.70 Tm (Injeta repositórios e EntityManager) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 596.10 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 596.10 Tm (Evita construir infraestrutura à mão) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 580.50 Tm (assertThat\(...\).isEqualByComparingTo\("51.80"\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 567.90 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 567.90 Tm (Compara BigDecimal por valor) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 555.30 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 555.30 Tm (isEqualTo falharia por diferença de scale \(51.8 vs 51.80\)) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 533.80 Tm (Linha a linha) Tj ET
+0.45 g 51.00 520.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 520.60 Tm (orderRepository.saveAndFlush\(order\); // \(1\)) Tj ET
+0.45 g 51.00 510.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 510.40 Tm (...) Tj ET
+0.45 g 51.00 500.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 500.20 Tm (entityManager.clear\(\);               // \(2\)) Tj ET
+0.45 g 51.00 490.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 490.00 Tm (OrderJpaEntity reloaded = orderRepository.findWithItemsById\(order.getId\(\)\).orElseThrow\(\); // \(3\)) Tj ET
+0.45 g 51.00 479.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 479.80 Tm (assertThat\(reloaded.getItems\(\)\).hasSize\(1\);                                              // \(4\)) Tj ET
+0.45 g 51.00 469.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 469.60 Tm (assertThat\(reloaded.getTotalAmount\(\)\).isEqualByComparingTo\("51.80"\);) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 453.00 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 453.00 Tm (saveAndFlush força o INSERT imediato; só save deixaria o SQL pendente no buffer do Hibernate.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 440.40 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 440.40 Tm (clear\(\) descarta o cache de primeiro nível \(L1\). Sem isso o teste é falso-positivo: o findById devolveria o objeto) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 427.80 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 427.80 Tm (em memória, sem consultar o banco.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 415.20 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 415.20 Tm (findWithItemsById usa @EntityGraph para trazer os itens no mesmo SELECT, evitando LazyInitializationException) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 402.60 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 402.60 Tm (fora da sessão.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 390.00 Tm (4.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 390.00 Tm (Aqui está a prova do fluxo: 2 x 25,90 = 51,80 tanto no item quanto no total, e o pedido voltou com canal e status) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 377.40 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 377.40 Tm (corretos.) Tj ET
+0.45 g 51.00 364.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 364.20 Tm (var byChannelAndStatus = orderRepository.findByOriginChannelAndStatus\() Tj ET
+0.45 g 51.00 354.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 354.00 Tm (SalesChannel.TOTEM, OrderStatus.PREPARING, PageRequest.of\(0, 10\)\);) Tj ET
+0.45 g 51.00 343.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 343.80 Tm (assertThat\(byChannelAndStatus.getContent\(\)\)) Tj ET
+0.45 g 51.00 333.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 333.60 Tm (.extracting\(OrderJpaEntity::getId\)) Tj ET
+0.45 g 51.00 323.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 323.40 Tm (.contains\(order.getId\(\)\);) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 306.80 Tm (A assinatura é derivada: Spring Data traduz findByOriginChannelAndStatus em WHERE origin_channel = ? AND) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 294.20 Tm (status = ?. Se alguém renomear o campo da entidade, o teste para de compilar/contexto falha ? o que é o) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 281.60 Tm (comportamento desejado.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 263.10 Tm (Padrões aplicados) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 250.50 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 250.50 Tm (Arrange / Act / Assert dentro de cada método.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 237.90 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 237.90 Tm (Teste de integração com rollback \(@Transactional\).) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 225.30 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 225.30 Tm (Boundary test: também verifica DataIntegrityViolationException em e-mail e idempotency_key duplicados.) Tj ET
+0.08 0.29 0.42 rg BT /F2 11.60 Tf 1 0 0 1 50.00 201.30 Tm (3.6 Arquivos explicados de forma resumida) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 188.70 Tm (Arquivo) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 176.10 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 176.10 Tm (Papel) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 160.50 Tm (PaymentStatus.java, PaymentMethod.java) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 147.90 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 147.90 Tm (Enums de estado e forma de pagamento) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 132.30 Tm (OrderItem.java) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 119.70 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 119.70 Tm (Valida quantidade positiva; subtotal = preço x quantidade) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 104.10 Tm (InventoryItem.java) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 91.50 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 91.50 Tm (deductStock recusa saldo negativo; base do futuro 409 de estoque insuficiente) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 75.90 Tm (Address.java) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 63.30 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 63.30 Tm (Value Object final e imutável, validado no construtor) Tj ET
+0.45 g BT /F1 8.00 Tf 1 0 0 1 231.02 34 Tm (rdn-api - Explicacao do projeto    6 / 9) Tj ET
+
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 6883 >>
+stream
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 784.40 Tm (AddressEmbeddable.java) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 771.80 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 771.80 Tm (Colunas de endereço embutidas em branches) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 756.20 Tm (OrderMapper.java) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 743.60 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 743.60 Tm (Converte entidade em domínio; usa BranchMapper.toDomainShallow para não carregar cardápio) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 728.00 Tm (OrderJpaRepository.java) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 715.40 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 715.40 Tm (Filtros por canal, canal + status, idempotência e @EntityGraph) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 699.80 Tm (application.properties) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 687.20 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 687.20 Tm (Datasource por env var, ddl-auto=validate, open-in-view=false) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 671.60 Tm (src/test/resources/application.properties) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 659.00 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 659.00 Tm (Substitui o de produção nos testes \(H2, Flyway off\)) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 643.40 Tm (V2__seed.sql) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 630.80 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 630.80 Tm (Filial, cardápio, 3 itens, estoque e 3 movimentos INBOUND) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 615.20 Tm (docs/DER.md, plans/01-persistencia-fluxo-a.md) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 602.60 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 602.60 Tm (DER em Mermaid e registro das decisões) Tj ET
+0.05 0.24 0.36 rg BT /F2 14.00 Tf 1 0 0 1 50.00 568.60 Tm (4. Decisões e trade-offs) Tj ET
+0.60 g 50.00 564.60 495.00 0.90 re f
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 548.00 Tm (Decisão) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 535.40 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 535.40 Tm (Alternativa descartada) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 522.80 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 522.80 Tm (Consequência aceita) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 507.20 Tm (Domínio puro + entidades JPA separadas) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 494.60 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 494.60 Tm (@Entity no próprio domain) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 482.00 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 482.00 Tm (13 entidades + 13 mappers a manter; em troca, Address continua imutável e o domínio não importa) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 469.40 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 469.40 Tm (jakarta.persistence) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 453.80 Tm (Order.changeStatus com tabela de transições) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 441.20 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 441.20 Tm (Validar no service) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 428.60 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 428.60 Tm (A regra não pode ser esquecida por um novo caso de uso; custo de mudar o fluxo exige editar a tabela) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 413.00 Tm (@GeneratedValue\(UUID\) no Java) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 400.40 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 400.40 Tm (gen_random_uuid\(\) no banco) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 387.80 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 387.80 Tm (Funciona igual em H2 e PostgreSQL; custo de o ID existir antes do INSERT) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 372.20 Tm (VARCHAR + CHECK para enums) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 359.60 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 359.60 Tm (CREATE TYPE ... AS ENUM do Postgres) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 347.00 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 347.00 Tm (Portabilidade para H2 nos testes; custo de alterar um enum exigir nova migration) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 331.40 Tm (TIMESTAMP sem timezone) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 318.80 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 318.80 Tm (TIMESTAMPTZ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 306.20 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 306.20 Tm (ddl-auto=validate passa sem configuração extra; custo de a aplicação ter de gravar em UTC \(já fixado em) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 293.60 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 293.60 Tm (hibernate.jdbc.time_zone\)) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 278.00 Tm (H2 modo PostgreSQL nos testes) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 265.40 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 265.40 Tm (Testcontainers) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 252.80 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 252.80 Tm (Roda sem Docker; custo de o teste não exercitar o dialeto real \(coberto por SchemaDdlTest no DDL\)) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 237.20 Tm (Usuários fora do seed inicial) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 224.60 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 224.60 Tm (Hash BCrypt inventado) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 212.00 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 212.00 Tm (Nenhum login quebrado depois; custo de o seed ficar incompleto por uma etapa) Tj ET
+0 g BT /F2 9.60 Tf 1 0 0 1 50.00 196.40 Tm (Payment desacoplado com múltiplas tentativas) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 183.80 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 183.80 Tm (Um pagamento por pedido) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 171.20 Tm (-) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 171.20 Tm (Histórico completo de recusas; custo de o caso de uso precisar escolher "a tentativa aprovada") Tj ET
+0.05 0.24 0.36 rg BT /F2 14.00 Tf 1 0 0 1 50.00 137.20 Tm (5. Conceitos-chave para fixar) Tj ET
+0.60 g 50.00 133.20 495.00 0.90 re f
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 116.60 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 116.60 Tm (Agregado \(Aggregate\): conjunto de objetos tratados como unidade ? Order comanda os OrderItem.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 104.00 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 104.00 Tm (Idempotência: repetir a mesma requisição produz o mesmo efeito ? garantida por idempotency_key em duas) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 91.40 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 91.40 Tm (tabelas e pelo requirePending\(\) de Payment.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 78.80 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 78.80 Tm (@Enumerated\(STRING\): persiste o nome do enum; ORDINAL grava a posição e quebra se a ordem mudar.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 66.20 Tm (4.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 66.20 Tm (Máquina de estados: transições válidas declaradas como dados ? ALLOWED_TRANSITIONS.) Tj ET
+0.45 g BT /F1 8.00 Tf 1 0 0 1 231.02 34 Tm (rdn-api - Explicacao do projeto    7 / 9) Tj ET
+
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Length 7994 >>
+stream
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 787.40 Tm (5.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 787.40 Tm (@Embeddable: objeto sem tabela própria, colunas embutidas no dono ? AddressEmbeddable.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 774.80 Tm (6.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 774.80 Tm (Query derivada: nome do método gera o SQL ? findByOriginChannelAndStatus.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 762.20 Tm (7.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 762.20 Tm (ddl-auto=validate: o Hibernate confere o schema e falha se divergir, mas nunca altera.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 749.60 Tm (8.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 749.60 Tm (Cache de primeiro nível: o EntityManager devolve a instância em memória; por isso entityManager.clear\(\) é) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 737.00 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 737.00 Tm (obrigatório para provar persistência.) Tj ET
+0.05 0.24 0.36 rg BT /F2 14.00 Tf 1 0 0 1 50.00 706.00 Tm (6. Erros comuns) Tj ET
+0.60 g 50.00 702.00 495.00 0.90 re f
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 685.40 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 685.40 Tm (Se você usar @Enumerated sem EnumType.STRING, o banco grava 0,1,2...; no dia em que alguém inserir um) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 672.80 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 672.80 Tm (valor no meio de OrderStatus, todos os pedidos antigos passam a ter o status errado, porque o CHECK do banco) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 660.20 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 660.20 Tm (espera nomes.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 647.60 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 647.60 Tm (Se você chamar order.setStatus\(...\) em vez de changeStatus\(...\), a máquina de estados é ignorada e um pedido) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 635.00 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 635.00 Tm (DELIVERED pode "voltar" para PREPARING ? o setStatus público existe só para os mapeadores reidratarem) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 622.40 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 622.40 Tm (objetos.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 609.80 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 609.80 Tm (Se você remover o entityManager.clear\(\) do teste, o findById devolve o objeto do cache L1, o SELECT nunca) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 597.20 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 597.20 Tm (executa e o teste passa mesmo com o mapeamento quebrado.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 584.60 Tm (4.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 584.60 Tm (Se você declarar TIMESTAMPTZ no DDL para um campo LocalDateTime, a aplicação nem sobe:) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 572.00 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 572.00 Tm (ddl-auto=validate compara os tipos e aborta o contexto.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 559.40 Tm (5.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 559.40 Tm (Se você trocar BigDecimal por double, 2 x 25.90 pode virar 51.799999999999997 e a CHECK/teste de total falha ?) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 546.80 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 546.80 Tm (dinheiro exige decimal.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 534.20 Tm (6.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 534.20 Tm (Se você esquecer orphanRemoval = true, remover um item da lista em memória não gera DELETE, e o pedido) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 521.60 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 521.60 Tm (volta do banco com item fantasma.) Tj ET
+0.05 0.24 0.36 rg BT /F2 14.00 Tf 1 0 0 1 50.00 490.60 Tm (7. Exercícios de fixação) Tj ET
+0.60 g 50.00 486.60 495.00 0.90 re f
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 464.10 Tm (Exercício 1 ? prever o comportamento) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 451.50 Tm (Qual é o resultado de order.changeStatus\(OrderStatus.READY\) num Order recém-criado \(status null\)? E de) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 438.90 Tm (changeStatus\(OrderStatus.CANCELLED\) também num recém-criado?) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 420.40 Tm (Gabarito) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 407.80 Tm (READY lança IllegalStateException\("pedido deve iniciar em RECEIVED"\): com status null, o único destino aceito é) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 395.20 Tm (RECEIVED \(linha 129 de Order.java\).) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 382.60 Tm (CANCELLED também lança, pelo mesmo motivo. A regra "cancela a partir de qualquer estado não final") Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 370.00 Tm (pressupõe que já exista um estado atual ? um pedido que nunca nasceu não pode ser cancelado. Se o requisito) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 357.40 Tm (fosse permitir cancelar antes do RECEIVED, essa linha 130 teria de ser ajustada.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 338.90 Tm (Exercício 2 ? escrever um teste) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 326.30 Tm (Escreva um teste que prove que InventoryItem.deductStock recusa retirar mais do que o saldo e que isAvailable\(\)) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 313.70 Tm (fica false quando o saldo cai ao limite mínimo.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 295.20 Tm (Gabarito) Tj ET
+0.45 g 51.00 282.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 282.00 Tm (@Test) Tj ET
+0.45 g 51.00 271.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 271.80 Tm (void recusaSaidaMaiorQueOSaldoEIndicaIndisponibilidade\(\) {) Tj ET
+0.45 g 51.00 261.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 261.60 Tm (InventoryItem item = new InventoryItem\(\);) Tj ET
+0.45 g 51.00 251.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 251.40 Tm (item.setQuantityOnHand\(new BigDecimal\("10.000"\)\);) Tj ET
+0.45 g 51.00 241.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 241.20 Tm (item.setMinimumThreshold\(new BigDecimal\("5.000"\)\);) Tj ET
+0.45 g 51.00 231.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 231.00 Tm (assertThat\(item.deductStock\(new BigDecimal\("11.000"\), "teste"\)\).isFalse\(\);) Tj ET
+0.45 g 51.00 220.80 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 220.80 Tm (assertThat\(item.getQuantityOnHand\(\)\).isEqualByComparingTo\("10.000"\);) Tj ET
+0.45 g 51.00 210.60 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 210.60 Tm (assertThat\(item.deductStock\(new BigDecimal\("5.000"\), "teste"\)\).isTrue\(\);) Tj ET
+0.45 g 51.00 200.40 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 200.40 Tm (assertThat\(item.getQuantityOnHand\(\)\).isEqualByComparingTo\("5.000"\);) Tj ET
+0.45 g 51.00 190.20 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 190.20 Tm (assertThat\(item.isAvailable\(\)\).isFalse\(\);) Tj ET
+0.45 g 51.00 180.00 2.20 9.00 re f
+0.15 g BT /F3 8.20 Tf 1 0 0 1 60.00 180.00 Tm (}) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 157.50 Tm (Exercício 3 ? alterar a regra sem quebrar o banco) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 144.90 Tm (Suponha que a cozinha precise de um estado PARTIALLY_READY entre PREPARING e READY. Liste todos os) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 132.30 Tm (pontos que precisam mudar, do domínio ao banco.) Tj ET
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 113.80 Tm (Gabarito) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 101.20 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 101.20 Tm (OrderStatus: adicionar PARTIALLY_READY.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 88.60 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 88.60 Tm (Order.ALLOWED_TRANSITIONS: PREPARING -> PARTIALLY_READY, PARTIALLY_READY -> READY |) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 76.00 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 76.00 Tm (CANCELLED.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 63.40 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 63.40 Tm (Migration nova \(V3__...sql\): não editar V1 ? CHECK não é alterável no lugar; é preciso ALTER TABLE orders) Tj ET
+0.45 g BT /F1 8.00 Tf 1 0 0 1 231.02 34 Tm (rdn-api - Explicacao do projeto    8 / 9) Tj ET
+
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 20 0 R >>
+endobj
+22 0 obj
+<< /Length 5320 >>
+stream
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 787.40 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 787.40 Tm (DROP CONSTRAINT ck_orders_status e recriar com a nova lista.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 774.80 Tm (4.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 774.80 Tm (docs/DER.md: atualizar o enum documentado.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 762.20 Tm (5.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 762.20 Tm (Teste de transição: novo caso válido e um inválido \(PARTIALLY_READY -> DELIVERED\).) Tj ET
+0.05 0.24 0.36 rg BT /F2 14.00 Tf 1 0 0 1 50.00 731.20 Tm (8. Checklist "consigo explicar sem olhar") Tj ET
+0.60 g 50.00 727.20 495.00 0.90 re f
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 710.60 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 710.60 Tm (Consigo dizer por que Order não tem @Entity e onde está o mapeamento dela?) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 698.00 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 698.00 Tm (Consigo explicar a diferença entre IllegalArgumentException e IllegalStateException em changeStatus?) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 685.40 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 685.40 Tm (Consigo justificar por que payments.idempotency_key é NOT NULL e orders.idempotency_key é nullable?) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 672.80 Tm (4.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 672.80 Tm (Consigo explicar o que acontece se eu remover orphanRemoval = true da lista de itens?) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 660.20 Tm (5.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 660.20 Tm (Consigo dizer por que o teste precisa de entityManager.clear\(\)?) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 647.60 Tm (6.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 647.60 Tm (Consigo explicar por que o DDL usa CHECK se o Java já valida o enum?) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 635.00 Tm (7.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 635.00 Tm (Consigo justificar TIMESTAMP em vez de TIMESTAMPTZ neste projeto?) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 622.40 Tm (8.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 622.40 Tm (Consigo explicar por que BranchMapper.toDomainShallow existe?) Tj ET
+0.05 0.24 0.36 rg BT /F2 14.00 Tf 1 0 0 1 50.00 591.40 Tm (9. Pontos de atenção e próximo passo) Tj ET
+0.60 g 50.00 587.40 495.00 0.90 re f
+0 g BT /F2 10.20 Tf 1 0 0 1 50.00 564.90 Tm (Riscos e dívidas técnicas) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 552.30 Tm (1.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 552.30 Tm (Order.setStatus público \(linha 192\) permite burlar a máquina de estados. Ideal: torná-lo protected/package-private) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 539.70 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 539.70 Tm (ou mover a reidratação para um construtor específico do mapper.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 527.10 Tm (2.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 527.10 Tm (Camadas application e api vazias: o projeto ainda não é uma API ? nenhum endpoint, nenhum DTO, nenhum) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 514.50 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 514.50 Tm (tratamento de erro padronizado.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 501.90 Tm (3.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 501.90 Tm (Mappers sem consumidor: foram escritos para uso dos adaptadores de repositório, que ainda não existem. Hoje) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 489.30 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 489.30 Tm (ninguém chama OrderMapper.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 476.70 Tm (4.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 476.70 Tm (Seed sem usuários: V2 cria apenas catálogo e estoque; users está vazio, então não há como logar.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 464.10 Tm (5.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 464.10 Tm (V1 nunca rodou em PostgreSQL real: validado apenas em H2 modo PostgreSQL. Rodar docker compose up -d +) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 451.50 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 451.50 Tm (mvnw spring-boot:run é obrigatório antes da entrega, para confirmar o ddl-auto=validate.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 438.90 Tm (6.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 438.90 Tm (AuthSession guarda apenas hash: AuthSessionMapper.toDomain devolve token nulo por design ? a validação de) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 426.30 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 426.30 Tm (sessão terá de ser feita por comparação de hash, não reidratando o token.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 413.70 Tm (7.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 413.70 Tm (Promotion não participa do pedido: falta a coluna/entidade de vínculo \(order_promotions\) para registrar qual) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 401.10 Tm ( ) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 66.00 401.10 Tm (promoção foi aplicada.) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 388.50 Tm (Próximo passo recomendado: implementar a camada application do Fluxo A \(CriarPedido,) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 375.90 Tm (RegistrarPagamentoMock, AtualizarStatus\), ainda sem HTTP, com testes de caso de uso sobre os repositórios já) Tj ET
+0 g BT /F1 9.60 Tf 1 0 0 1 50.00 363.30 Tm (existentes ? é o que transforma "modelo que persiste" em "fluxo que funciona".) Tj ET
+0.45 g BT /F1 8.00 Tf 1 0 0 1 231.02 34 Tm (rdn-api - Explicacao do projeto    9 / 9) Tj ET
+
+endstream
+endobj
+23 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 22 0 R >>
+endobj
+xref
+0 24
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000170 00000 n 
+0000000267 00000 n 
+0000000369 00000 n 
+0000000464 00000 n 
+0000006562 00000 n 
+0000006708 00000 n 
+0000015665 00000 n 
+0000015811 00000 n 
+0000023981 00000 n 
+0000024129 00000 n 
+0000031738 00000 n 
+0000031886 00000 n 
+0000040784 00000 n 
+0000040932 00000 n 
+0000048457 00000 n 
+0000048605 00000 n 
+0000055541 00000 n 
+0000055689 00000 n 
+0000063736 00000 n 
+0000063884 00000 n 
+0000069257 00000 n 
+trailer
+<< /Size 24 /Root 1 0 R >>
+startxref
+69405
+%%EOF
