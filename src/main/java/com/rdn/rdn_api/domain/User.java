@@ -27,21 +27,6 @@ public class User {
     }
 
     /**
-     * Verifica a senha informada contra o valor armazenado.
-     *
-     * <p>Comparacao direta de Strings: nao aplica algoritmo de hash. Deve ser
-     * trocada por verificacao de hash quando a infraestrutura de seguranca
-     * existir.</p>
-     *
-     * @param password senha informada
-     * @return {@code true} quando a senha coincide com o valor armazenado,
-     *         {@code false} caso contrario
-     */
-    public Boolean authenticate(String password) {
-        return password != null && password.equals(passwordHash);
-    }
-
-    /**
      * Atualiza a senha armazenada.
      *
      * @param newPassword novo valor de senha/hash

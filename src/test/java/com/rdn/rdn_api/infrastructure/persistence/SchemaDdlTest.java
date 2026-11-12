@@ -15,9 +15,10 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 /**
  * Executa o DDL real do Flyway sobre um banco vazio.
  *
- * <p>Objetivo: garantir que {@code V1__schema.sql} e {@code V2__seed.sql} sao
- * aplicaveis do zero e que o seed produz os registros esperados, sem depender de
- * um PostgreSQL rodando na maquina de desenvolvimento.</p>
+ * <p>Objetivo: garantir que {@code V1__schema.sql}, {@code V2__seed.sql} e
+ * {@code V3__seed_users.sql} sao aplicaveis do zero e que os seeds produzem os
+ * registros esperados, sem depender de um PostgreSQL rodando na maquina de
+ * desenvolvimento.</p>
  */
 class SchemaDdlTest {
 
@@ -31,6 +32,7 @@ class SchemaDdlTest {
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
         populator.addScript(new ClassPathResource("db/migration/V1__schema.sql"));
         populator.addScript(new ClassPathResource("db/migration/V2__seed.sql"));
+        populator.addScript(new ClassPathResource("db/migration/V3__seed_users.sql"));
         populator.execute(dataSource);
 
         try (Connection connection = dataSource.getConnection();
@@ -40,11 +42,22 @@ class SchemaDdlTest {
             assertThat(count(statement, "menu_items")).isEqualTo(3);
             assertThat(count(statement, "inventory_items")).isEqualTo(3);
             assertThat(count(statement, "inventory_movements")).isEqualTo(3);
+
+            assertThat(count(statement, "users")).isEqualTo(4);
+            assertThat(countUsersWithBcryptHash(statement)).isEqualTo(4);
         }
     }
 
     private static long count(Statement statement, String table) throws Exception {
         try (ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM " + table)) {
+            resultSet.next();
+            return resultSet.getLong(1);
+        }
+    }
+
+    private static long countUsersWithBcryptHash(Statement statement) throws Exception {
+        try (ResultSet resultSet = statement.executeQuery(
+                "SELECT COUNT(*) FROM users WHERE password_hash LIKE '$2a$%'")) {
             resultSet.next();
             return resultSet.getLong(1);
         }
