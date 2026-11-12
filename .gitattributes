@@ -1,2 +1,6 @@
 /mvnw text eol=lf
 *.cmd text eol=crlf
+
+# Artefatos binarios: nunca aplicar conversao de fim de linha no checkout.
+*.pdf binary
+*.png binary
