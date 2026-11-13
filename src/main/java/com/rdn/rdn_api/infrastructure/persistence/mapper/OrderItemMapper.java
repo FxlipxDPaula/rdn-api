@@ -30,6 +30,17 @@ public final class OrderItemMapper {
         return item;
     }
 
+    public static OrderItemJpaEntity toEntity(OrderItem domain) {
+        if (domain == null) {
+            return null;
+        }
+
+        OrderItemJpaEntity entity = new OrderItemJpaEntity();
+        copyScalarsToEntity(domain, entity);
+
+        return entity;
+    }
+
     public static void copyScalarsToEntity(OrderItem domain, OrderItemJpaEntity entity) {
         entity.setQuantity(domain.getQuantity());
         entity.setUnitPrice(domain.getUnitPrice());

@@ -51,6 +51,7 @@ public class Order {
      */
     private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED_TRANSITIONS =
             Map.of(
+                    OrderStatus.AGUARDANDO_PAGAMENTO, Set.of(OrderStatus.RECEIVED, OrderStatus.CANCELLED),
                     OrderStatus.RECEIVED, Set.of(OrderStatus.PREPARING, OrderStatus.CANCELLED),
                     OrderStatus.PREPARING, Set.of(OrderStatus.READY, OrderStatus.CANCELLED),
                     OrderStatus.READY, Set.of(OrderStatus.DELIVERED, OrderStatus.CANCELLED),
@@ -151,6 +152,35 @@ public class Order {
     public void cancel(String reason) {
         changeStatus(OrderStatus.CANCELLED);
         this.cancellationReason = reason;
+    }
+
+    /**
+     * Coloca um pedido recem-criado em espera de pagamento.
+     *
+     * <p>Usado apenas na criacao, quando a forma de pagamento e {@code MOCK}:
+     * nenhum pedido que ja tenha status pode voltar para a espera.</p>
+     *
+     * @throws IllegalStateException quando o pedido ja possui status
+     */
+    public void awaitPayment() {
+        if (status != null) {
+            throw new IllegalStateException("pedido ja iniciado com status " + status);
+        }
+
+        this.status = OrderStatus.AGUARDANDO_PAGAMENTO;
+    }
+
+    /**
+     * Confirma o pagamento e libera o pedido para a cozinha.
+     *
+     * <p>Delega para {@link #changeStatus(OrderStatus)} para nao duplicar a
+     * regra: so um pedido em {@code AGUARDANDO_PAGAMENTO} pode ir para
+     * {@code RECEIVED}.</p>
+     *
+     * @throws IllegalStateException quando o pedido nao esta aguardando pagamento
+     */
+    public void confirmPayment() {
+        changeStatus(OrderStatus.RECEIVED);
     }
 
     public UUID getId() {

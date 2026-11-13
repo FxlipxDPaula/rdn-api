@@ -31,6 +31,17 @@ public final class PaymentMapper {
         return payment;
     }
 
+    public static PaymentJpaEntity toEntity(Payment domain) {
+        if (domain == null) {
+            return null;
+        }
+
+        PaymentJpaEntity entity = new PaymentJpaEntity();
+        copyScalarsToEntity(domain, entity);
+
+        return entity;
+    }
+
     public static void copyScalarsToEntity(Payment domain, PaymentJpaEntity entity) {
         entity.setId(domain.getId());
         entity.setAmount(domain.getAmount());

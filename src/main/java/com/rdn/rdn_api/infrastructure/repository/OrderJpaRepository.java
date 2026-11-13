@@ -25,6 +25,8 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, UUID> 
     Page<OrderJpaEntity> findByOriginChannelAndStatus(SalesChannel originChannel,
             OrderStatus status, Pageable pageable);
 
+    Page<OrderJpaEntity> findByStatus(OrderStatus status, Pageable pageable);
+
     Optional<OrderJpaEntity> findByIdempotencyKey(String idempotencyKey);
 
     boolean existsByIdempotencyKey(String idempotencyKey);

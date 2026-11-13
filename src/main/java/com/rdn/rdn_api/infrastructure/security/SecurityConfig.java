@@ -8,6 +8,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -55,6 +56,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/error").permitAll()
+                        // pedidos: cliente cria e consulta; operacao lista e move status
+                        .requestMatchers(HttpMethod.POST, "/pedidos").hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/pedidos").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers(HttpMethod.PATCH, "/pedidos/*/status").hasAnyRole("KITCHEN", "STAFF", "ADMIN")
+                        // pagamento: mesmo conjunto de quem pode criar o pedido
+                        .requestMatchers(HttpMethod.POST, "/pedidos/*/pagamentos").hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint(authenticationEntryPoint)

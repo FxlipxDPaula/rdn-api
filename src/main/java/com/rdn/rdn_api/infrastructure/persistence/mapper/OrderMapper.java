@@ -21,6 +21,32 @@ public final class OrderMapper {
     }
 
     public static Order toDomain(OrderJpaEntity entity) {
+        Order order = toDomainShallow(entity);
+        if (order == null) {
+            return null;
+        }
+
+        List<OrderItem> items = new ArrayList<>();
+        for (OrderItemJpaEntity item : entity.getItems()) {
+            items.add(OrderItemMapper.toDomain(item));
+        }
+        order.setItems(items);
+
+        return order;
+    }
+
+    /**
+     * Converte a entidade sem carregar a colecao de itens.
+     *
+     * <p>Usado na listagem paginada: com {@code open-in-view=false} tocar em
+     * {@code entity.getItems()} fora da transacao estouraria
+     * {@code LazyInitializationException}, e paginar colecao com
+     * {@code join fetch} faria o Hibernate paginar em memoria.</p>
+     *
+     * @param entity entidade de pedido
+     * @return pedido de dominio sem itens, ou {@code null}
+     */
+    public static Order toDomainShallow(OrderJpaEntity entity) {
         if (entity == null) {
             return null;
         }
@@ -37,13 +63,18 @@ public final class OrderMapper {
         order.setCancellationReason(entity.getCancellationReason());
         order.setIdempotencyKey(entity.getIdempotencyKey());
 
-        List<OrderItem> items = new ArrayList<>();
-        for (OrderItemJpaEntity item : entity.getItems()) {
-            items.add(OrderItemMapper.toDomain(item));
-        }
-        order.setItems(items);
-
         return order;
+    }
+
+    public static OrderJpaEntity toEntity(Order domain) {
+        if (domain == null) {
+            return null;
+        }
+
+        OrderJpaEntity entity = new OrderJpaEntity();
+        copyScalarsToEntity(domain, entity);
+
+        return entity;
     }
 
     public static void copyScalarsToEntity(Order domain, OrderJpaEntity entity) {

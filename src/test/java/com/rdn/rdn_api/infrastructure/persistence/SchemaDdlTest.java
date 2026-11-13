@@ -15,10 +15,11 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 /**
  * Executa o DDL real do Flyway sobre um banco vazio.
  *
- * <p>Objetivo: garantir que {@code V1__schema.sql}, {@code V2__seed.sql} e
- * {@code V3__seed_users.sql} sao aplicaveis do zero e que os seeds produzem os
- * registros esperados, sem depender de um PostgreSQL rodando na maquina de
- * desenvolvimento.</p>
+ * <p>Objetivo: garantir que {@code V1__schema.sql}, {@code V2__seed.sql},
+ * {@code V3__seed_users.sql} e {@code V4__add_awaiting_payment_status.sql} sao
+ * aplicaveis do zero, que os seeds produzem os registros esperados e que a
+ * constraint de status aceita o novo valor {@code AGUARDANDO_PAGAMENTO}, sem
+ * depender de um PostgreSQL rodando na maquina de desenvolvimento.</p>
  */
 class SchemaDdlTest {
 
@@ -33,6 +34,7 @@ class SchemaDdlTest {
         populator.addScript(new ClassPathResource("db/migration/V1__schema.sql"));
         populator.addScript(new ClassPathResource("db/migration/V2__seed.sql"));
         populator.addScript(new ClassPathResource("db/migration/V3__seed_users.sql"));
+        populator.addScript(new ClassPathResource("db/migration/V4__add_awaiting_payment_status.sql"));
         populator.execute(dataSource);
 
         try (Connection connection = dataSource.getConnection();
@@ -45,6 +47,24 @@ class SchemaDdlTest {
 
             assertThat(count(statement, "users")).isEqualTo(4);
             assertThat(countUsersWithBcryptHash(statement)).isEqualTo(4);
+
+            // V4 ampliou a constraint de status. A verificacao e feita pelo
+            // catalogo do banco, e nao por INSERT: no H2 2.x a expressao
+            // CHECK criada na sessao do populator guarda um cache ligado a
+            // aquela sessao e falha ao ser avaliada depois que ela fecha.
+            assertThat(checkClause(statement, "ck_orders_status"))
+                    .contains("AGUARDANDO_PAGAMENTO")
+                    .contains("RECEIVED")
+                    .doesNotContain("PENDING");
+        }
+    }
+
+    private static String checkClause(Statement statement, String constraintName) throws Exception {
+        try (ResultSet resultSet = statement.executeQuery(
+                "SELECT CHECK_CLAUSE FROM INFORMATION_SCHEMA.CHECK_CONSTRAINTS "
+                        + "WHERE CONSTRAINT_NAME = '" + constraintName + "'")) {
+            assertThat(resultSet.next()).isTrue();
+            return resultSet.getString(1);
         }
     }
 

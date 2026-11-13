@@ -15,6 +15,13 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.rdn.rdn_api.application.auth.InactiveUserException;
 import com.rdn.rdn_api.application.auth.InvalidCredentialsException;
+import com.rdn.rdn_api.application.order.exception.InsufficientStockException;
+import com.rdn.rdn_api.application.order.exception.InvalidStatusTransitionException;
+import com.rdn.rdn_api.application.order.exception.OperationNotAllowedException;
+import com.rdn.rdn_api.application.order.exception.ResourceNotFoundException;
+import com.rdn.rdn_api.application.payment.exception.IdempotencyConflictException;
+import com.rdn.rdn_api.application.payment.exception.MissingIdempotencyKeyException;
+import com.rdn.rdn_api.application.payment.exception.OrderNotAwaitingPaymentException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -71,6 +78,63 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
         return ApiError.of("METODO_NAO_SUPORTADO", "Metodo HTTP nao suportado para este recurso.",
                 request.getRequestURI());
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
+        return ApiError.of("RECURSO_NAO_ENCONTRADO", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(OperationNotAllowedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiError handleOperationNotAllowed(OperationNotAllowedException ex, HttpServletRequest request) {
+        return ApiError.of("ACESSO_NEGADO", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(InsufficientStockException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleInsufficientStock(InsufficientStockException ex, HttpServletRequest request) {
+        List<ApiErrorDetail> details = List.of(new ApiErrorDetail(
+                "itens[produtoId=" + ex.getProdutoId() + "].quantidade",
+                "Disponivel: " + ex.getDisponivel() + "; solicitado: " + ex.getSolicitado()));
+
+        return ApiError.of("ESTOQUE_INSUFICIENTE",
+                "Nao ha quantidade suficiente para um ou mais itens.", details, request.getRequestURI());
+    }
+
+    @ExceptionHandler(InvalidStatusTransitionException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleInvalidTransition(InvalidStatusTransitionException ex,
+            HttpServletRequest request) {
+        return ApiError.of("TRANSICAO_INVALIDA", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(OrderNotAwaitingPaymentException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleOrderNotAwaitingPayment(OrderNotAwaitingPaymentException ex,
+            HttpServletRequest request) {
+        return ApiError.of("PEDIDO_NAO_AGUARDA_PAGAMENTO", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(IdempotencyConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleIdempotencyConflict(IdempotencyConflictException ex,
+            HttpServletRequest request) {
+        return ApiError.of("CHAVE_IDEMPOTENCIA_CONFLITANTE", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(MissingIdempotencyKeyException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleMissingIdempotencyKey(MissingIdempotencyKeyException ex,
+            HttpServletRequest request) {
+        return ApiError.of("CABECALHO_OBRIGATORIO", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
+        return ApiError.of("DADOS_INVALIDOS", ex.getMessage(), request.getRequestURI());
     }
 
     @ExceptionHandler(Exception.class)
