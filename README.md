@@ -7,6 +7,7 @@ consentimento, promoções e auditoria de ações sensíveis.
 ## 1. Visão geral
 
 - Pedidos podem nascer em `APP`, `TOTEM`, `BALCAO`, `PICKUP` ou `WEB`; o canal é obrigatório.
+- Usuários são criados por `POST /usuarios`, restrito a `ADMIN`; a senha é gravada apenas como hash BCrypt.
 - O estoque é controlado por unidade e item, com baixa transacional e lock pessimista.
 - O pagamento é simulado por um gateway determinístico (`APROVADO`, `RECUSADO`, `FALHA`), com
   `Idempotency-Key` obrigatório.
@@ -38,7 +39,7 @@ O domínio não importa JPA. As entidades de persistência ficam em
 - Maven Wrapper incluído (`mvnw` / `mvnw.cmd`) — não é necessário instalar Maven.
 - PostgreSQL 16 ou Docker para o banco real.
 - Portas padrão: `8080` para a API e `5432` para o PostgreSQL.
-- Opcional: Python 3 com `reportlab` para gerar os relatórios ABNT em `docs/`.
+- Opcional: Python 3 com `reportlab` e `Pillow` para gerar os diagramas e os relatórios ABNT em `docs/`.
 
 > Se o terminal apontar para um JRE antigo, defina `JAVA_HOME` para um JDK 25 antes de rodar o
 > wrapper. Exemplo no Windows:
@@ -141,6 +142,7 @@ na `V5` são `...00c1` (10%), `...00c2` (R$ 5,00) e `...00c3` (expirada, para te
 5. `GET /fidelidade` e `GET /fidelidade/transacoes` para ver os pontos.
 6. Crie outro pedido com `MOCK` e use `POST /fidelidade/resgates` com `{ "pedidoId":"...", "pontos":100 }`.
 7. Com o token de `ADMIN`, consulte `GET /auditoria?acao=ORDER_CREATED`.
+8. Com o token de `ADMIN`, crie um usuário em `POST /usuarios` e autentique com ele em `POST /auth/login`.
 
 ## 10. Endpoints
 
@@ -148,6 +150,7 @@ na `V5` são `...00c1` (10%), `...00c2` (R$ 5,00) e `...00c3` (expirada, para te
 |---|---|---|---|
 | `POST` | `/auth/login` | público | Login e emissão de JWT |
 | `GET` | `/auth/me` | autenticado | Usuário do token |
+| `POST` | `/usuarios` | `ADMIN` | Cadastro de usuário com senha hasheada |
 | `GET` | `/unidades` | autenticado | Unidades abertas |
 | `GET` | `/unidades/{id}/cardapio` | autenticado | Cardápio da unidade |
 | `GET` | `/promocoes` | autenticado | Campanhas ativas e vigência |
@@ -176,6 +179,7 @@ A suíte usa H2 em modo PostgreSQL e não exige Docker. Cobre domínio, casos de
 JWT, incluindo:
 
 - autenticação, `401` e `403`;
+- cadastro de usuário: `201`, login com a nova senha, `409` de e-mail duplicado e `400` de validação;
 - criação, listagem, detalhe e transição de status;
 - estoque insuficiente, produto inexistente e parâmetro inválido;
 - pagamento aprovado, recusado, falha e replay idempotente;
@@ -198,13 +202,15 @@ Importe os dois no Postman, selecione o environment e execute na ordem:
 `01-Auth` → `02-Catalogo` → `03-Pedidos` → `04-Pagamento` → `05-Fidelidade` → `06-Promocoes` →
 `07-Auditoria` → `08-Erros`.
 
-A coleção possui 20 cenários (T01–T20), com pelo menos 6 positivos e 4 negativos. Os scripts salvam
-`token`, `pedidoId` e `pagamentoId` automaticamente. Para o cenário de replay, a chave é fixa; nos
-demais, use `{{$guid}}`.
+A coleção possui 25 cenários (T01–T25), com pelo menos 6 positivos e 4 negativos. A pasta `08-Erros`
+concentra T21 e T22 (negativos), T23 (cadastro positivo), T24 e T25 (negativos); os demais cenários
+permanecem nas pastas de recurso. Os scripts salvam `token`, `pedidoId`, `pagamentoId`, `pedidoRecusaId`
+e `novoUsuarioEmail` automaticamente. Para o replay, a chave é fixa; nos demais cenários, use `{{$guid}}`.
 
 ## 13. Segurança e LGPD
 
 - Senhas são armazenadas apenas como hash BCrypt; a senha pura não é persistida.
+- O cadastro de usuários é restrito a `ADMIN`; a senha em texto puro não é persistida nem devolvida.
 - Autenticação stateless com JWT HS256; autoridades derivadas de `UserRole`.
 - Autorização por perfil em `SecurityConfig`: cliente, operação, cozinha e administração.
 - O consentimento de fidelidade é explícito e registrado com timestamp; o opt-out congela o uso
@@ -225,6 +231,7 @@ demais, use `{{$guid}}`.
 - CRUD administrativo de filial, cardápio e promoções não faz parte do MVP.
 - O resgate de pontos é aplicado como desconto em pedido `AGUARDANDO_PAGAMENTO`; não há conversão
   em dinheiro nem transferência de pontos.
+- Não há listagem, edição ou desativação de usuários; o escopo entregue é apenas o cadastro por `ADMIN`.
 - Docker não está instalado na máquina de desenvolvimento usada neste trabalho. O
   `docker-compose.yml` está pronto e o `SchemaDdlTest` cobre `V1`–`V5`; a validação em PostgreSQL
   real deve ser executada pelo avaliador conforme a seção 5.
@@ -233,12 +240,13 @@ demais, use `{{$guid}}`.
 
 | Evidência | Onde |
 |---|---|
-| Repositório público | `<preencher com a URL pública do repositório>` |
+| Repositório público | https://github.com/FxlipxDPaula/rdn-api |
 | Swagger local | `http://localhost:8080/swagger-ui.html` |
 | OpenAPI JSON | `http://localhost:8080/v3/api-docs` |
 | Coleção Postman | `postman/rdn-api.postman_collection.json` |
 | Environment Postman | `postman/rdn-api.postman_environment.json` |
 | DER | [`docs/DER.md`](docs/DER.md) |
+| Diagramas | `docs/diagrams/` (PNGs) e `tools/render_diagrams.py` |
 | Relatórios por etapa | `docs/etapa-1-*.pdf` a `docs/etapa-5-*.pdf` |
 | Relatório final ABNT | `docs/projeto-back-end-final-abnt.pdf` |
 
@@ -246,16 +254,29 @@ demais, use `{{$guid}}`.
 
 ```text
 src/main/java/com/rdn/rdn_api/
-  api/            controllers, DTOs e tratamento de erro
-  application/    casos de uso e portas
+  api/            controllers, DTOs e tratamento de erro (inclui api/user)
+  application/    casos de uso e portas (inclui application/user)
   domain/         entidades e regras de negócio
-  infrastructure/ JPA, segurança, pagamento mock, auditoria e OpenAPI
+  infrastructure/ JPA, segurança, pagamento mock, auditoria e OpenAPI (inclui persistence/user)
 src/main/resources/
   db/migration/   V1 a V5
   application.properties
 src/test/java/    testes unitários e de integração
 plans/            planos das etapas
 docs/             DER e relatórios ABNT
-tools/            geradores de PDF ABNT
+docs/diagrams/    fontes e PNGs dos diagramas
+tools/            geradores de diagramas e PDF ABNT
 postman/          coleção e environment
 ```
+
+### 16.1 Como regenerar os artefatos
+
+Antes de gerar o PDF final, preencha `INSTITUTION`, `COURSE` e `RU` em
+[`tools/abnt_doc.py`](tools/abnt_doc.py:55).
+
+```bash
+python tools/render_diagrams.py      # PNGs em docs/diagrams/
+python tools/abnt_pdf_final.py       # docs/projeto-back-end-final-abnt.pdf
+```
+
+No Windows, copie o PDF final para `<RU>_Projeto_Back_End.PDF` no momento da submissão.

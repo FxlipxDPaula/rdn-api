@@ -70,6 +70,8 @@ public class SecurityConfig {
                         // consultas de catalogo e campanhas: qualquer autenticado
                         .requestMatchers(HttpMethod.GET, "/promocoes").authenticated()
                         .requestMatchers(HttpMethod.GET, "/unidades", "/unidades/*/cardapio").authenticated()
+                        // cadastro de usuarios: somente administracao
+                        .requestMatchers(HttpMethod.POST, "/usuarios").hasRole("ADMIN")
                         // auditoria: somente administracao
                         .requestMatchers(HttpMethod.GET, "/auditoria").hasRole("ADMIN")
                         .anyRequest().authenticated())

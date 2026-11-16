@@ -13,6 +13,8 @@ Este modulo concentra a formatacao; o conteudo de cada etapa fica nos
 arquivos abnt_pdf_etapa3.py e abnt_pdf_etapa4.py.
 """
 
+import os
+
 from xml.sax.saxutils import escape
 
 from reportlab.lib import colors
@@ -20,9 +22,12 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
+from reportlab.lib.utils import ImageReader
 from reportlab.platypus import (
     BaseDocTemplate,
     Frame,
+    Image,
+    KeepTogether,
     LongTable,
     PageBreak,
     PageTemplate,
@@ -45,6 +50,12 @@ YEAR = "2026"
 CITY = "Caxias do Sul - RS"
 PROJECT = "PROJETO MULTIDISCIPLINAR"
 TRACK = "TRILHA BACK-END"
+
+# Preencher antes de gerar o PDF final de submissao.
+INSTITUTION = "[INSTITUICAO DE ENSINO]"
+COURSE = "[CURSO]"
+RU = "RU: [PREENCHER]"
+PROFESSOR = "Prof. Me. Luciane Yanase Kanashiro"
 
 BODY = ParagraphStyle(
     "body", fontName="Times-Roman", fontSize=12, leading=18,
@@ -75,6 +86,16 @@ TABLE_TEXT = ParagraphStyle(
 )
 TABLE_HEAD = ParagraphStyle(
     "table_head", fontName="Times-Bold", fontSize=10, leading=13, alignment=TA_LEFT,
+)
+TABLE_TEXT_SMALL = ParagraphStyle(
+    "table_text_small", fontName="Times-Roman", fontSize=8.5, leading=11, alignment=TA_LEFT,
+)
+TABLE_HEAD_SMALL = ParagraphStyle(
+    "table_head_small", fontName="Times-Bold", fontSize=8.5, leading=11, alignment=TA_LEFT,
+)
+TABLE_SOURCE = ParagraphStyle(
+    "table_source", fontName="Times-Roman", fontSize=9, leading=12, alignment=TA_LEFT,
+    spaceAfter=8,
 )
 COVER_LINE = ParagraphStyle(
     "cover_line", fontName="Times-Bold", fontSize=12, leading=18, alignment=TA_CENTER,
@@ -143,19 +164,24 @@ class AbntReport:
         self._section = 0
         self._subsection = 0
         self._table = 0
+        self._figure = 0
 
     # ---------------------------------------------------------------- estrutura
     def cover(self):
         self.story += [
+            Paragraph(escape(INSTITUTION), COVER_LINE),
+            Paragraph(escape(COURSE), COVER_SUBTITLE),
             Paragraph(escape(PROJECT), COVER_LINE),
-            Paragraph(escape(TRACK), COVER_LINE),
-            Spacer(1, 2.0 * cm),
+            Paragraph(escape(TRACK), COVER_SUBTITLE),
+            Paragraph(escape(PROFESSOR), COVER_SUBTITLE),
+            Spacer(1, 1.6 * cm),
             Paragraph(escape(AUTHOR), COVER_SUBTITLE),
-            Spacer(1, 3.0 * cm),
+            Paragraph(escape(RU), COVER_SUBTITLE),
+            Spacer(1, 2.4 * cm),
             Paragraph(escape(self.title), COVER_TITLE),
             Spacer(1, 0.5 * cm),
             Paragraph(escape(self.subtitle), COVER_SUBTITLE),
-            Spacer(1, 6.0 * cm),
+            Spacer(1, 4.2 * cm),
             Paragraph(escape(CITY), COVER_SUBTITLE),
             Paragraph(escape(YEAR), COVER_SUBTITLE),
             PageBreak(),
@@ -173,21 +199,27 @@ class AbntReport:
         toc.dotsMinLevel = 0
         return toc
 
-    def h1(self, text):
-        self._section += 1
-        self._subsection = 0
-        node = Paragraph(
-            "%d %s" % (self._section, escape(text)), SECTION,
-        )
+    def h1(self, text, numbered=True):
+        if numbered:
+            self._section += 1
+            self._subsection = 0
+            label = "%d %s" % (self._section, escape(text))
+        else:
+            label = escape(text)
+
+        node = Paragraph(label, SECTION)
         node._toc_level = 1
         self.story.append(node)
         return self
 
-    def h2(self, text):
-        self._subsection += 1
-        node = Paragraph(
-            "%d.%d %s" % (self._section, self._subsection, escape(text)), SUBSECTION,
-        )
+    def h2(self, text, numbered=True):
+        if numbered:
+            self._subsection += 1
+            label = "%d.%d %s" % (self._section, self._subsection, escape(text))
+        else:
+            label = escape(text)
+
+        node = Paragraph(label, SUBSECTION)
         node._toc_level = 2
         self.story.append(node)
         return self
@@ -202,18 +234,21 @@ class AbntReport:
         return self
 
     def code(self, snippet):
-        self.story.append(Preformatted(snippet.strip("\n"), CODE))
+        self.story.append(KeepTogether(Preformatted(snippet.strip("\n"), CODE)))
         return self
 
-    def table(self, caption, headers, rows, widths=None):
+    def table(self, caption, headers, rows, widths=None, compact=False, source=None):
         self._table += 1
         self.story.append(
             Paragraph("Tabela %d \u2014 %s" % (self._table, escape(caption)), CAPTION),
         )
 
-        data = [[Paragraph("<b>%s</b>" % escape(h), TABLE_HEAD) for h in headers]]
+        head_style = TABLE_HEAD_SMALL if compact else TABLE_HEAD
+        text_style = TABLE_TEXT_SMALL if compact else TABLE_TEXT
+
+        data = [[Paragraph("<b>%s</b>" % escape(h), head_style) for h in headers]]
         for row in rows:
-            data.append([Paragraph(escape(str(cell)), TABLE_TEXT) for cell in row])
+            data.append([Paragraph(escape(str(cell)), text_style) for cell in row])
 
         if widths is None:
             widths = [TEXT_WIDTH / len(headers)] * len(headers)
@@ -225,18 +260,47 @@ class AbntReport:
             ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#888888")),
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EDEDED")),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("LEFTPADDING", (0, 0), (-1, -1), 5),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-            ("TOPPADDING", (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING", (0, 0), (-1, -1), 4 if compact else 5),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 4 if compact else 5),
+            ("TOPPADDING", (0, 0), (-1, -1), 3 if compact else 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 3 if compact else 4),
         ]))
-        self.story += [table, Spacer(1, 0.3 * cm)]
+        self.story.append(table)
+        self.story.append(Paragraph(
+            escape(source or "Fonte: elaborado pelo autor (2026)."), TABLE_SOURCE,
+        ))
+        self.story.append(Spacer(1, 0.3 * cm))
+        return self
+
+    def figure(self, path, caption, source="Fonte: elaborado pelo autor (2026).",
+               max_height=20 * cm):
+        if not os.path.exists(path):
+            raise FileNotFoundError(
+                "Figura nao encontrada: %s. Rode python tools/render_diagrams.py." % path
+            )
+
+        reader = ImageReader(path)
+        width_px, height_px = reader.getSize()
+        width = TEXT_WIDTH
+        height = width * height_px / width_px
+        if height > max_height:
+            height = max_height
+            width = height * width_px / height_px
+
+        self._figure += 1
+        image = Image(path, width=width, height=height)
+        image.hAlign = "CENTER"
+        self.story.append(KeepTogether([
+            Paragraph("Figura %d \u2014 %s" % (self._figure, escape(caption)), CAPTION),
+            image,
+            Paragraph(escape(source), TABLE_SOURCE),
+            Spacer(1, 0.4 * cm),
+        ]))
         return self
 
     def references(self, lines):
         self.story.append(PageBreak())
-        node = Paragraph("REFER\u00caNCIAS", SECTION)
-        self.story.append(node)
+        self.h1("REFER\u00caNCIAS", numbered=False)
         for line in lines:
             self.story.append(Paragraph(escape(line), LIST_ITEM))
         return self

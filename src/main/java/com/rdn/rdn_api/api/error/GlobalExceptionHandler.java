@@ -29,6 +29,7 @@ import com.rdn.rdn_api.application.payment.exception.IdempotencyConflictExceptio
 import com.rdn.rdn_api.application.payment.exception.MissingIdempotencyKeyException;
 import com.rdn.rdn_api.application.payment.exception.OrderNotAwaitingPaymentException;
 import com.rdn.rdn_api.application.promotion.exception.PromotionNotApplicableException;
+import com.rdn.rdn_api.application.user.exception.EmailAlreadyRegisteredException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -54,6 +55,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ApiError handleInactiveUser(InactiveUserException ex, HttpServletRequest request) {
         return ApiError.of("USUARIO_INATIVO", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(EmailAlreadyRegisteredException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleEmailAlreadyRegistered(EmailAlreadyRegisteredException ex,
+            HttpServletRequest request) {
+        return ApiError.of("EMAIL_JA_CADASTRADO", ex.getMessage(), request.getRequestURI());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

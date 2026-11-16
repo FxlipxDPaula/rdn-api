@@ -10,6 +10,7 @@ public enum AuditAction {
 
     LOGIN_SUCCESS,
     LOGIN_FAILURE,
+    USER_CREATED,
     ORDER_CREATED,
     ORDER_STATUS_CHANGED,
     ORDER_CANCELLED,
