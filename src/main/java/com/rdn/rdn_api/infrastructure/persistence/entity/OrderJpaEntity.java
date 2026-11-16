@@ -70,6 +70,10 @@ public class OrderJpaEntity {
     @Column(name = "idempotency_key", unique = true, length = 64)
     private String idempotencyKey;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "promotion_id")
+    private PromotionJpaEntity promotion;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true,
             fetch = FetchType.LAZY)
     private List<OrderItemJpaEntity> items = new ArrayList<>();
@@ -152,6 +156,14 @@ public class OrderJpaEntity {
 
     public void setIdempotencyKey(String idempotencyKey) {
         this.idempotencyKey = idempotencyKey;
+    }
+
+    public PromotionJpaEntity getPromotion() {
+        return promotion;
+    }
+
+    public void setPromotion(PromotionJpaEntity promotion) {
+        this.promotion = promotion;
     }
 
     public List<OrderItemJpaEntity> getItems() {

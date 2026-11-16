@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.rdn.rdn_api.application.audit.AuditGateway;
 import com.rdn.rdn_api.domain.User;
 import com.rdn.rdn_api.domain.UserRole;
 
@@ -33,13 +34,15 @@ class LoginServiceTest {
 
     private final TokenIssuer tokenIssuer = mock(TokenIssuer.class);
 
+    private final AuditGateway auditGateway = mock(AuditGateway.class);
+
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4);
 
     private LoginService loginService;
 
     @BeforeEach
     void setUp() {
-        loginService = new LoginService(userGateway, passwordEncoder, tokenIssuer);
+        loginService = new LoginService(userGateway, passwordEncoder, tokenIssuer, auditGateway);
     }
 
     @Test

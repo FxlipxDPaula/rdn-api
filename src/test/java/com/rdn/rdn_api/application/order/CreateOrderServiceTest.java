@@ -19,15 +19,20 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.rdn.rdn_api.application.audit.AuditGateway;
 import com.rdn.rdn_api.application.auth.AuthenticatedUser;
 import com.rdn.rdn_api.application.order.CreateOrderCommand.CreateOrderItemCommand;
 import com.rdn.rdn_api.application.order.exception.InsufficientStockException;
 import com.rdn.rdn_api.application.order.exception.ResourceNotFoundException;
+import com.rdn.rdn_api.application.promotion.PromotionGateway;
+import com.rdn.rdn_api.application.promotion.exception.PromotionNotApplicableException;
 import com.rdn.rdn_api.domain.Branch;
+import com.rdn.rdn_api.domain.DiscountType;
 import com.rdn.rdn_api.domain.MenuItem;
 import com.rdn.rdn_api.domain.Order;
 import com.rdn.rdn_api.domain.OrderStatus;
 import com.rdn.rdn_api.domain.PaymentMethod;
+import com.rdn.rdn_api.domain.Promotion;
 import com.rdn.rdn_api.domain.SalesChannel;
 import com.rdn.rdn_api.domain.User;
 import com.rdn.rdn_api.domain.UserRole;
@@ -43,6 +48,8 @@ class CreateOrderServiceTest {
 
     private static final UUID CUSTOMER_ID = UUID.randomUUID();
 
+    private static final UUID PROMOCAO_ID = UUID.randomUUID();
+
     private final OrderGateway orderGateway = mock(OrderGateway.class);
 
     private final CatalogGateway catalogGateway = mock(CatalogGateway.class);
@@ -51,12 +58,16 @@ class CreateOrderServiceTest {
 
     private final InventoryGateway inventoryGateway = mock(InventoryGateway.class);
 
+    private final PromotionGateway promotionGateway = mock(PromotionGateway.class);
+
+    private final AuditGateway auditGateway = mock(AuditGateway.class);
+
     private CreateOrderService createOrderService;
 
     @BeforeEach
     void setUp() {
         createOrderService = new CreateOrderService(orderGateway, catalogGateway,
-                customerGateway, inventoryGateway);
+                customerGateway, inventoryGateway, promotionGateway, auditGateway);
 
         when(orderGateway.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
@@ -119,7 +130,7 @@ class CreateOrderServiceTest {
         givenStock(new BigDecimal("10.000"));
 
         CreateOrderCommand command = new CreateOrderCommand(SalesChannel.TOTEM, BRANCH_ID, null,
-                PaymentMethod.CASH,
+                PaymentMethod.CASH, null,
                 List.of(new CreateOrderItemCommand(PRODUTO_ID, 2, null),
                         new CreateOrderItemCommand(PRODUTO_ID, 3, null)));
 
@@ -129,6 +140,56 @@ class CreateOrderServiceTest {
         assertThat(order.getItems().get(0).getQuantity()).isEqualTo(5);
         verify(inventoryGateway).reserve(eq(BRANCH_ID), eq(PRODUTO_ID), eq(BigDecimal.valueOf(5)),
                 anyString());
+    }
+
+    @Test
+    void aplicaPromocaoPercentualSobreOSubtotal() {
+        givenCatalogAndCustomer();
+        givenStock(new BigDecimal("10.000"));
+        when(promotionGateway.findById(PROMOCAO_ID)).thenReturn(Optional.of(promotion(null)));
+
+        CreateOrderCommand command = new CreateOrderCommand(SalesChannel.TOTEM, BRANCH_ID, null,
+                PaymentMethod.CASH, PROMOCAO_ID,
+                List.of(new CreateOrderItemCommand(PRODUTO_ID, 2, null)));
+
+        Order order = createOrderService.create(command, customerPrincipal());
+
+        assertThat(order.getDiscountAmount()).isEqualByComparingTo("5.18");
+        assertThat(order.getTotalAmount()).isEqualByComparingTo("46.62");
+        assertThat(order.getPromotion().getId()).isEqualTo(PROMOCAO_ID);
+    }
+
+    @Test
+    void recusaPromocaoExpiradaSemPersistirPedido() {
+        givenCatalogAndCustomer();
+        givenStock(new BigDecimal("10.000"));
+        when(promotionGateway.findById(PROMOCAO_ID))
+                .thenReturn(Optional.of(promotion(java.time.LocalDateTime.now().minusDays(1))));
+
+        CreateOrderCommand command = new CreateOrderCommand(SalesChannel.TOTEM, BRANCH_ID, null,
+                PaymentMethod.CASH, PROMOCAO_ID,
+                List.of(new CreateOrderItemCommand(PRODUTO_ID, 2, null)));
+
+        assertThatThrownBy(() -> createOrderService.create(command, customerPrincipal()))
+                .isInstanceOf(PromotionNotApplicableException.class);
+
+        verify(orderGateway, never()).save(any());
+    }
+
+    @Test
+    void recusaPromocaoInexistente() {
+        givenCatalogAndCustomer();
+        givenStock(new BigDecimal("10.000"));
+        when(promotionGateway.findById(PROMOCAO_ID)).thenReturn(Optional.empty());
+
+        CreateOrderCommand command = new CreateOrderCommand(SalesChannel.TOTEM, BRANCH_ID, null,
+                PaymentMethod.CASH, PROMOCAO_ID,
+                List.of(new CreateOrderItemCommand(PRODUTO_ID, 2, null)));
+
+        assertThatThrownBy(() -> createOrderService.create(command, customerPrincipal()))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(orderGateway, never()).save(any());
     }
 
     private void givenCatalogAndCustomer() {
@@ -143,8 +204,20 @@ class CreateOrderServiceTest {
     }
 
     private static CreateOrderCommand command(PaymentMethod method, int quantity) {
-        return new CreateOrderCommand(SalesChannel.TOTEM, BRANCH_ID, null, method,
+        return new CreateOrderCommand(SalesChannel.TOTEM, BRANCH_ID, null, method, null,
                 List.of(new CreateOrderItemCommand(PRODUTO_ID, quantity, "sem cebola")));
+    }
+
+    private static Promotion promotion(java.time.LocalDateTime endDate) {
+        Promotion promotion = new Promotion();
+        promotion.setId(PROMOCAO_ID);
+        promotion.setTitle("Semana do Burger");
+        promotion.setDiscountType(DiscountType.PERCENTAGE);
+        promotion.setDiscountValue(new BigDecimal("10.00"));
+        promotion.setMinOrderValue(new BigDecimal("30.00"));
+        promotion.setEndDate(endDate);
+        promotion.setIsActive(Boolean.TRUE);
+        return promotion;
     }
 
     private static AuthenticatedUser customerPrincipal() {

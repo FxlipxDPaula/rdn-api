@@ -7,7 +7,11 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.rdn.rdn_api.application.audit.AuditAction;
+import com.rdn.rdn_api.application.audit.AuditEntry;
+import com.rdn.rdn_api.application.audit.AuditGateway;
 import com.rdn.rdn_api.application.auth.AuthenticatedUser;
+import com.rdn.rdn_api.application.loyalty.LoyaltyService;
 import com.rdn.rdn_api.application.order.OrderGateway;
 import com.rdn.rdn_api.application.order.exception.OperationNotAllowedException;
 import com.rdn.rdn_api.application.order.exception.ResourceNotFoundException;
@@ -17,6 +21,7 @@ import com.rdn.rdn_api.application.payment.exception.OrderNotAwaitingPaymentExce
 import com.rdn.rdn_api.domain.Order;
 import com.rdn.rdn_api.domain.OrderStatus;
 import com.rdn.rdn_api.domain.Payment;
+import com.rdn.rdn_api.domain.PaymentStatus;
 import com.rdn.rdn_api.domain.UserRole;
 
 /**
@@ -36,11 +41,17 @@ public class RequestPaymentService {
 
     private final PaymentProvider paymentProvider;
 
+    private final LoyaltyService loyaltyService;
+
+    private final AuditGateway auditGateway;
+
     public RequestPaymentService(OrderGateway orderGateway, PaymentRepository paymentRepository,
-            PaymentProvider paymentProvider) {
+            PaymentProvider paymentProvider, LoyaltyService loyaltyService, AuditGateway auditGateway) {
         this.orderGateway = orderGateway;
         this.paymentRepository = paymentRepository;
         this.paymentProvider = paymentProvider;
+        this.loyaltyService = loyaltyService;
+        this.auditGateway = auditGateway;
     }
 
     /**
@@ -82,8 +93,35 @@ public class RequestPaymentService {
 
         applyResult(payment, order, result);
 
-        orderGateway.save(order);
-        return new PaymentResult(paymentRepository.save(payment), false);
+        Order savedOrder = orderGateway.save(order);
+        Payment savedPayment = paymentRepository.save(payment);
+
+        auditPayment(savedPayment, savedOrder, principal);
+        if (result.approved()) {
+            loyaltyService.awardForApprovedOrder(savedOrder, principal);
+        }
+
+        return new PaymentResult(savedPayment, false);
+    }
+
+    private void auditPayment(Payment payment, Order order, AuthenticatedUser principal) {
+        AuditAction action = switch (payment.getStatus()) {
+            case APPROVED -> AuditAction.PAYMENT_APPROVED;
+            case DECLINED -> AuditAction.PAYMENT_DECLINED;
+            case FAILED -> AuditAction.PAYMENT_FAILED;
+            default -> null;
+        };
+        if (action == null) {
+            return;
+        }
+
+        UUID actorId = principal == null ? null : principal.id();
+        String actorEmail = principal == null ? null : principal.email();
+        UserRole actorRole = principal == null ? null : principal.role();
+        String details = "pedido=" + order.getId() + " valor=" + payment.getAmount();
+
+        auditGateway.record(new AuditEntry(actorId, actorEmail, actorRole, action, "PAYMENT",
+                payment.getId(), details));
     }
 
     private PaymentResult replay(Payment payment, UUID pedidoId) {

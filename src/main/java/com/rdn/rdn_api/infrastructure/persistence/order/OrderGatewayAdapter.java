@@ -22,6 +22,7 @@ import com.rdn.rdn_api.infrastructure.persistence.mapper.OrderMapper;
 import com.rdn.rdn_api.infrastructure.repository.BranchJpaRepository;
 import com.rdn.rdn_api.infrastructure.repository.MenuItemJpaRepository;
 import com.rdn.rdn_api.infrastructure.repository.OrderJpaRepository;
+import com.rdn.rdn_api.infrastructure.repository.PromotionJpaRepository;
 import com.rdn.rdn_api.infrastructure.repository.UserJpaRepository;
 
 /**
@@ -38,12 +39,16 @@ public class OrderGatewayAdapter implements OrderGateway {
 
     private final MenuItemJpaRepository menuItemRepository;
 
+    private final PromotionJpaRepository promotionRepository;
+
     public OrderGatewayAdapter(OrderJpaRepository orderRepository, UserJpaRepository userRepository,
-            BranchJpaRepository branchRepository, MenuItemJpaRepository menuItemRepository) {
+            BranchJpaRepository branchRepository, MenuItemJpaRepository menuItemRepository,
+            PromotionJpaRepository promotionRepository) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.branchRepository = branchRepository;
         this.menuItemRepository = menuItemRepository;
+        this.promotionRepository = promotionRepository;
     }
 
     @Override
@@ -86,6 +91,9 @@ public class OrderGatewayAdapter implements OrderGateway {
         entity.setBranch(branchRepository.getReferenceById(order.getBranch().getId()));
         if (order.getCustomer() != null) {
             entity.setCustomer(userRepository.getReferenceById(order.getCustomer().getId()));
+        }
+        if (order.getPromotion() != null) {
+            entity.setPromotion(promotionRepository.getReferenceById(order.getPromotion().getId()));
         }
 
         for (OrderItem item : order.getItems()) {

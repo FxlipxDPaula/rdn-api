@@ -31,6 +31,7 @@ public final class OrderMapper {
             items.add(OrderItemMapper.toDomain(item));
         }
         order.setItems(items);
+        order.setPromotion(PromotionMapper.toDomain(entity.getPromotion()));
 
         return order;
     }

@@ -2,9 +2,14 @@ package com.rdn.rdn_api.application.auth;
 
 import java.util.Locale;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.rdn.rdn_api.application.audit.AuditAction;
+import com.rdn.rdn_api.application.audit.AuditEntry;
+import com.rdn.rdn_api.application.audit.AuditGateway;
 import com.rdn.rdn_api.domain.User;
 
 /**
@@ -20,16 +25,22 @@ import com.rdn.rdn_api.domain.User;
 @Service
 public class LoginService {
 
+    private static final Logger log = LoggerFactory.getLogger(LoginService.class);
+
     private final AuthUserGateway userGateway;
 
     private final PasswordEncoder passwordEncoder;
 
     private final TokenIssuer tokenIssuer;
 
-    public LoginService(AuthUserGateway userGateway, PasswordEncoder passwordEncoder, TokenIssuer tokenIssuer) {
+    private final AuditGateway auditGateway;
+
+    public LoginService(AuthUserGateway userGateway, PasswordEncoder passwordEncoder, TokenIssuer tokenIssuer,
+            AuditGateway auditGateway) {
         this.userGateway = userGateway;
         this.passwordEncoder = passwordEncoder;
         this.tokenIssuer = tokenIssuer;
+        this.auditGateway = auditGateway;
     }
 
     /**
@@ -45,19 +56,38 @@ public class LoginService {
     public LoginResult login(LoginCommand command) {
         String email = normalizeEmail(command.email());
 
-        User user = userGateway.findByEmail(email)
-                .orElseThrow(() -> new InvalidCredentialsException("E-mail ou senha invalidos."));
-
-        if (!passwordMatches(command.password(), user.getPasswordHash())) {
+        User user = userGateway.findByEmail(email).orElse(null);
+        if (user == null || !passwordMatches(command.password(), user.getPasswordHash())) {
+            auditLoginFailure(email, "credenciais invalidas");
             throw new InvalidCredentialsException("E-mail ou senha invalidos.");
         }
 
         if (!user.isActive()) {
+            auditLoginFailure(email, "usuario inativo");
             throw new InactiveUserException("Usuario inativo.");
         }
 
         TokenIssuer.IssuedToken token = tokenIssuer.issue(user);
+        auditLoginSuccess(user);
+
         return new LoginResult(token.accessToken(), "Bearer", token.expiresInSeconds(), AuthenticatedUser.from(user));
+    }
+
+    private void auditLoginSuccess(User user) {
+        recordAuditSafely(new AuditEntry(user.getId(), user.getEmail(), user.getRole(),
+                AuditAction.LOGIN_SUCCESS, "AUTH", user.getId(), "login"));
+    }
+
+    private void auditLoginFailure(String email, String reason) {
+        recordAuditSafely(new AuditEntry(null, email, null, AuditAction.LOGIN_FAILURE, "AUTH", null, reason));
+    }
+
+    private void recordAuditSafely(AuditEntry entry) {
+        try {
+            auditGateway.record(entry);
+        } catch (RuntimeException ex) {
+            log.warn("Falha ao registrar auditoria de login: {}", ex.getMessage());
+        }
     }
 
     private static String normalizeEmail(String email) {

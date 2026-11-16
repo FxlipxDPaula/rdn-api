@@ -1,0 +1,623 @@
+{
+  "info": {
+    "_postman_id": "d7c1f3a2-5b6e-4c1a-9f0d-2a7b8c9d0e1f",
+    "name": "RDN API - Fluxo A",
+    "description": "Colecao de testes da API RDN: autenticacao, catalogo, pedidos, pagamento mock, fidelidade, promocoes e auditoria.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01-Auth",
+      "item": [
+        {
+          "name": "T01 Login cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"accessToken presente\", function () { pm.expect(body.accessToken).to.be.a(\"string\"); });",
+                  "pm.environment.set(\"token\", body.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"senha\": \"{{customerPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "T02 Login admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"perfil ADMIN\", function () { pm.expect(body.user.role).to.eql(\"ADMIN\"); });",
+                  "pm.environment.set(\"adminToken\", body.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"senha\": \"{{adminPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "T02b Login staff",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.environment.set(\"staffToken\", pm.response.json().accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{staffEmail}}\",\n  \"senha\": \"{{staffPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "T13 Sem token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 401\", function () { pm.response.to.have.status(401); });",
+                  "pm.test(\"erro padrao\", function () { pm.expect(pm.response.json().error).to.eql(\"NAO_AUTENTICADO\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/pedidos"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02-Catalogo",
+      "item": [
+        {
+          "name": "T04 Listar unidades",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"unidade semeada\", function () { pm.expect(pm.response.text()).to.include(\"RDN Centro\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/unidades"
+          }
+        },
+        {
+          "name": "T05 Consultar cardapio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"itens do cardapio\", function () { pm.expect(pm.response.text()).to.include(\"X-Burger\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/unidades/{{unidadeId}}/cardapio"
+          }
+        }
+      ]
+    },
+    {
+      "name": "06-Promocoes",
+      "item": [
+        {
+          "name": "T03 Listar promocoes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"campanha ativa\", function () { pm.expect(pm.response.text()).to.include(\"Semana do Burger\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/promocoes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03-Pedidos",
+      "item": [
+        {
+          "name": "T06 Criar pedido com promocao",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"desconto de 10%\", function () { pm.expect(body.desconto).to.eql(5.18); });",
+                  "pm.environment.set(\"pedidoId\", body.pedidoId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"canalPedido\": \"TOTEM\",\n  \"unidadeId\": \"{{unidadeId}}\",\n  \"formaPagamento\": \"MOCK\",\n  \"promocaoId\": \"{{promocaoId}}\",\n  \"itens\": [\n    { \"produtoId\": \"{{produtoId}}\", \"quantidade\": 2, \"observacao\": \"sem cebola\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/pedidos"
+          }
+        },
+        {
+          "name": "T08 Consultar pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"pedido com itens\", function () { pm.expect(pm.response.json().itens.length).to.be.above(0); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/pedidos/{{pedidoId}}"
+          }
+        },
+        {
+          "name": "T15 Pedido sem canal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"erro de validacao\", function () { pm.expect(pm.response.json().error).to.eql(\"DADOS_INVALIDOS\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidadeId\": \"{{unidadeId}}\",\n  \"formaPagamento\": \"MOCK\",\n  \"itens\": [\n    { \"produtoId\": \"{{produtoId}}\", \"quantidade\": 1 }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/pedidos"
+          }
+        },
+        {
+          "name": "T16 Estoque insuficiente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", function () { pm.response.to.have.status(409); });",
+                  "pm.test(\"erro de estoque\", function () { pm.expect(pm.response.json().error).to.eql(\"ESTOQUE_INSUFICIENTE\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"canalPedido\": \"TOTEM\",\n  \"unidadeId\": \"{{unidadeId}}\",\n  \"formaPagamento\": \"MOCK\",\n  \"itens\": [\n    { \"produtoId\": \"{{produtoId}}\", \"quantidade\": 9999 }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/pedidos"
+          }
+        },
+        {
+          "name": "T17 Promocao expirada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", function () { pm.response.to.have.status(409); });",
+                  "pm.test(\"promocao nao aplicavel\", function () { pm.expect(pm.response.json().error).to.eql(\"PROMOCAO_NAO_APLICAVEL\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"canalPedido\": \"TOTEM\",\n  \"unidadeId\": \"{{unidadeId}}\",\n  \"formaPagamento\": \"MOCK\",\n  \"promocaoId\": \"{{promocaoExpiradaId}}\",\n  \"itens\": [\n    { \"produtoId\": \"{{produtoId}}\", \"quantidade\": 2 }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/pedidos"
+          }
+        },
+        {
+          "name": "T19 Query param invalido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"parametro invalido\", function () { pm.expect(pm.response.json().error).to.eql(\"PARAMETRO_INVALIDO\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }],
+            "url": "{{baseUrl}}/pedidos?canalPedido=XYZ"
+          }
+        },
+        {
+          "name": "T14 Cliente listando pedidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"acesso negado\", function () { pm.expect(pm.response.json().error).to.eql(\"ACESSO_NEGADO\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/pedidos"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04-Pagamento",
+      "item": [
+        {
+          "name": "T07 Pagar aprovado",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"idempotencyKey\", pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"pagamento aprovado\", function () { pm.expect(body.status).to.eql(\"APPROVED\"); });",
+                  "pm.test(\"pedido liberado\", function () { pm.expect(body.pedidoStatus).to.eql(\"RECEIVED\"); });",
+                  "pm.environment.set(\"pagamentoId\", body.pagamentoId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formaPagamento\": \"MOCK\",\n  \"simular\": \"APROVADO\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/pedidos/{{pedidoId}}/pagamentos"
+          }
+        },
+        {
+          "name": "T20 Replay da mesma chave",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"mesmo pagamento\", function () { pm.expect(pm.response.json().pagamentoId).to.eql(pm.environment.get(\"pagamentoId\")); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formaPagamento\": \"MOCK\",\n  \"simular\": \"APROVADO\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/pedidos/{{pedidoId}}/pagamentos"
+          }
+        }
+      ]
+    },
+    {
+      "name": "05-Fidelidade",
+      "item": [
+        {
+          "name": "T09 Consultar fidelidade",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"pontos acumulados\", function () { pm.expect(pm.response.json().saldoPontos).to.be.above(0); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/fidelidade"
+          }
+        },
+        {
+          "name": "T10 Consultar extrato",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"lancamento EARNED\", function () { pm.expect(pm.response.text()).to.include(\"EARNED\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/fidelidade/transacoes?page=0&limit=10"
+          }
+        },
+        {
+          "name": "T11a Criar pedido para resgate",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"pedidoResgateId\", pm.response.json().pedidoId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"canalPedido\": \"APP\",\n  \"unidadeId\": \"{{unidadeId}}\",\n  \"formaPagamento\": \"MOCK\",\n  \"itens\": [\n    { \"produtoId\": \"{{produtoId}}\", \"quantidade\": 2 }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/pedidos"
+          }
+        },
+        {
+          "name": "T11 Resgatar pontos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"desconto aplicado\", function () { pm.expect(pm.response.json().descontoAplicado).to.eql(4); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedidoId\": \"{{pedidoResgateId}}\",\n  \"pontos\": {{pontosResgate}}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/fidelidade/resgates"
+          }
+        },
+        {
+          "name": "T18a Revogar consentimento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"opt-out\", function () { pm.expect(pm.response.json().consentimento).to.eql(false); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consentimento\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/fidelidade/consentimento"
+          }
+        },
+        {
+          "name": "T18 Resgate sem consentimento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", function () { pm.response.to.have.status(409); });",
+                  "pm.test(\"consentimento necessario\", function () { pm.expect(pm.response.json().error).to.eql(\"CONSENTIMENTO_NECESSARIO\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedidoId\": \"{{pedidoResgateId}}\",\n  \"pontos\": 10\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/fidelidade/resgates"
+          }
+        }
+      ]
+    },
+    {
+      "name": "07-Auditoria",
+      "item": [
+        {
+          "name": "T12 Consultar auditoria",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"acao auditada\", function () { pm.expect(pm.response.text()).to.include(\"ORDER_CREATED\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/auditoria?acao=ORDER_CREATED&page=0&limit=10"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" }
+  ]
+}

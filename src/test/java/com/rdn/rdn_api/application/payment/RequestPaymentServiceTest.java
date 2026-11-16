@@ -15,7 +15,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.rdn.rdn_api.application.audit.AuditGateway;
 import com.rdn.rdn_api.application.auth.AuthenticatedUser;
+import com.rdn.rdn_api.application.loyalty.LoyaltyService;
 import com.rdn.rdn_api.application.order.OrderGateway;
 import com.rdn.rdn_api.application.order.exception.OperationNotAllowedException;
 import com.rdn.rdn_api.application.order.exception.ResourceNotFoundException;
@@ -47,12 +49,18 @@ class RequestPaymentServiceTest {
 
     private final PaymentProvider paymentProvider = mock(PaymentProvider.class);
 
+    private final LoyaltyService loyaltyService = mock(LoyaltyService.class);
+
+    private final AuditGateway auditGateway = mock(AuditGateway.class);
+
     private RequestPaymentService service;
 
     @BeforeEach
     void setUp() {
-        service = new RequestPaymentService(orderGateway, paymentRepository, paymentProvider);
+        service = new RequestPaymentService(orderGateway, paymentRepository, paymentProvider,
+                loyaltyService, auditGateway);
 
+        when(orderGateway.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(paymentRepository.findByIdempotencyKey(KEY)).thenReturn(Optional.empty());
         when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> {
             Payment payment = invocation.getArgument(0);

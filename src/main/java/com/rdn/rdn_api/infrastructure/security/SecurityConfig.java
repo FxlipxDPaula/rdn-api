@@ -56,12 +56,22 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // pedidos: cliente cria e consulta; operacao lista e move status
                         .requestMatchers(HttpMethod.POST, "/pedidos").hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/pedidos").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers(HttpMethod.PATCH, "/pedidos/*/status").hasAnyRole("KITCHEN", "STAFF", "ADMIN")
                         // pagamento: mesmo conjunto de quem pode criar o pedido
                         .requestMatchers(HttpMethod.POST, "/pedidos/*/pagamentos").hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
+                        // fidelidade: apenas o cliente dono da conta
+                        .requestMatchers(HttpMethod.GET, "/fidelidade", "/fidelidade/transacoes").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.PUT, "/fidelidade/consentimento").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.POST, "/fidelidade/resgates").hasRole("CUSTOMER")
+                        // consultas de catalogo e campanhas: qualquer autenticado
+                        .requestMatchers(HttpMethod.GET, "/promocoes").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/unidades", "/unidades/*/cardapio").authenticated()
+                        // auditoria: somente administracao
+                        .requestMatchers(HttpMethod.GET, "/auditoria").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint(authenticationEntryPoint)

@@ -46,19 +46,31 @@ public class Promotion {
      * @return {@code true} quando a promocao pode ser aplicada
      */
     public Boolean isValidFor(Order order) {
-        LocalDateTime now = LocalDateTime.now();
-
-        boolean active = Boolean.TRUE.equals(isActive);
-        boolean started = startDate == null || !now.isBefore(startDate);
-        boolean notEnded = endDate == null || !now.isAfter(endDate);
-
-        BigDecimal orderValue = order == null || order.getTotalAmount() == null
-                ? BigDecimal.ZERO
-                : order.getTotalAmount();
+        BigDecimal orderValue = order == null ? BigDecimal.ZERO : order.subtotal();
         boolean reachesMinimum = minOrderValue == null
                 || orderValue.compareTo(minOrderValue) >= 0;
 
-        return active && started && notEnded && reachesMinimum;
+        return Boolean.TRUE.equals(isActive)
+                && isWithinValidity(LocalDateTime.now())
+                && reachesMinimum;
+    }
+
+    /**
+     * Informa se a janela de vigencia cobre o instante informado.
+     *
+     * <p>Separado de {@link #isValidFor(Order)} para a listagem de campanhas poder
+     * exibir a vigencia sem precisar montar um pedido.</p>
+     *
+     * @param moment instante de referencia
+     * @return {@code true} quando a promocao esta dentro do periodo
+     */
+    public boolean isWithinValidity(LocalDateTime moment) {
+        LocalDateTime reference = moment == null ? LocalDateTime.now() : moment;
+
+        boolean started = startDate == null || !reference.isBefore(startDate);
+        boolean notEnded = endDate == null || !reference.isAfter(endDate);
+
+        return started && notEnded;
     }
 
     /**
@@ -74,9 +86,7 @@ public class Promotion {
         }
 
         if (discountType == DiscountType.PERCENTAGE) {
-            BigDecimal orderValue = order == null || order.getTotalAmount() == null
-                    ? BigDecimal.ZERO
-                    : order.getTotalAmount();
+            BigDecimal orderValue = order == null ? BigDecimal.ZERO : order.subtotal();
 
             return orderValue.multiply(discountValue)
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);

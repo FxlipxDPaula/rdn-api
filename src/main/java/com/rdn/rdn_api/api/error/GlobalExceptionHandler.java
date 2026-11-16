@@ -11,10 +11,16 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.rdn.rdn_api.application.auth.InactiveUserException;
 import com.rdn.rdn_api.application.auth.InvalidCredentialsException;
+import com.rdn.rdn_api.application.loyalty.exception.ConsentRequiredException;
+import com.rdn.rdn_api.application.loyalty.exception.InsufficientPointsException;
+import com.rdn.rdn_api.application.loyalty.exception.RedemptionAlreadyAppliedException;
+import com.rdn.rdn_api.application.loyalty.exception.RedemptionExceedsOrderTotalException;
+import com.rdn.rdn_api.application.loyalty.exception.RedemptionNotAllowedException;
 import com.rdn.rdn_api.application.order.exception.InsufficientStockException;
 import com.rdn.rdn_api.application.order.exception.InvalidStatusTransitionException;
 import com.rdn.rdn_api.application.order.exception.OperationNotAllowedException;
@@ -22,6 +28,7 @@ import com.rdn.rdn_api.application.order.exception.ResourceNotFoundException;
 import com.rdn.rdn_api.application.payment.exception.IdempotencyConflictException;
 import com.rdn.rdn_api.application.payment.exception.MissingIdempotencyKeyException;
 import com.rdn.rdn_api.application.payment.exception.OrderNotAwaitingPaymentException;
+import com.rdn.rdn_api.application.promotion.exception.PromotionNotApplicableException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -129,6 +136,64 @@ public class GlobalExceptionHandler {
     public ApiError handleMissingIdempotencyKey(MissingIdempotencyKeyException ex,
             HttpServletRequest request) {
         return ApiError.of("CABECALHO_OBRIGATORIO", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(PromotionNotApplicableException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handlePromotionNotApplicable(PromotionNotApplicableException ex,
+            HttpServletRequest request) {
+        return ApiError.of("PROMOCAO_NAO_APLICAVEL", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(ConsentRequiredException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleConsentRequired(ConsentRequiredException ex, HttpServletRequest request) {
+        return ApiError.of("CONSENTIMENTO_NECESSARIO", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(InsufficientPointsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleInsufficientPoints(InsufficientPointsException ex,
+            HttpServletRequest request) {
+        List<ApiErrorDetail> details = List.of(new ApiErrorDetail("pontos",
+                "Disponivel: " + ex.getAvailable() + "; solicitado: " + ex.getRequested()));
+
+        return ApiError.of("PONTOS_INSUFICIENTES", ex.getMessage(), details, request.getRequestURI());
+    }
+
+    @ExceptionHandler(RedemptionAlreadyAppliedException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleRedemptionAlreadyApplied(RedemptionAlreadyAppliedException ex,
+            HttpServletRequest request) {
+        return ApiError.of("RESGATE_JA_APLICADO", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(RedemptionExceedsOrderTotalException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleRedemptionExceedsOrderTotal(RedemptionExceedsOrderTotalException ex,
+            HttpServletRequest request) {
+        List<ApiErrorDetail> details = List.of(new ApiErrorDetail("desconto",
+                "Desconto: " + ex.getDiscount() + "; saldo devedor: " + ex.getRemaining()));
+
+        return ApiError.of("RESGATE_EXCEDE_TOTAL", ex.getMessage(), details, request.getRequestURI());
+    }
+
+    @ExceptionHandler(RedemptionNotAllowedException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleRedemptionNotAllowed(RedemptionNotAllowedException ex,
+            HttpServletRequest request) {
+        return ApiError.of("RESGATE_NAO_PERMITIDO", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleTypeMismatch(MethodArgumentTypeMismatchException ex,
+            HttpServletRequest request) {
+        List<ApiErrorDetail> details = List.of(new ApiErrorDetail(ex.getName(),
+                "Valor invalido para o parametro."));
+
+        return ApiError.of("PARAMETRO_INVALIDO", "Parametro de requisicao invalido.", details,
+                request.getRequestURI());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

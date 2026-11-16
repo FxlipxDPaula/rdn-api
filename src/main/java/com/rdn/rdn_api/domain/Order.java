@@ -45,6 +45,8 @@ public class Order {
 
     private String idempotencyKey;
 
+    private Promotion promotion;
+
     /**
      * Transicoes de status permitidas. {@link OrderStatus#DELIVERED} e
      * {@link OrderStatus#CANCELLED} sao estados finais e nao possuem saida.
@@ -87,16 +89,27 @@ public class Order {
     }
 
     /**
+     * Soma os subtotais dos itens, sem aplicar desconto.
+     *
+     * @return subtotal do pedido, ou {@link BigDecimal#ZERO} quando nao ha itens
+     */
+    public BigDecimal subtotal() {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (OrderItem orderItem : items) {
+            sum = sum.add(orderItem.calculateSubtotal());
+        }
+
+        return sum;
+    }
+
+    /**
      * Calcula o total do pedido como a soma dos subtotais dos itens menos o
      * desconto, atualizando {@code totalAmount}.
      *
      * @return total calculado, ou {@link BigDecimal#ZERO} quando nao ha itens
      */
     public BigDecimal calculateTotal() {
-        BigDecimal sum = BigDecimal.ZERO;
-        for (OrderItem orderItem : items) {
-            sum = sum.add(orderItem.calculateSubtotal());
-        }
+        BigDecimal sum = subtotal();
 
         BigDecimal discount = discountAmount == null ? BigDecimal.ZERO : discountAmount;
         if (discount.signum() < 0) {
@@ -108,6 +121,41 @@ public class Order {
 
         totalAmount = sum.subtract(discount);
         return totalAmount;
+    }
+
+    /**
+     * Define o desconto do pedido, limitado ao subtotal dos itens.
+     *
+     * @param discount valor do desconto (promocao, resgate ou ajuste)
+     * @return total recalculado
+     * @throws IllegalArgumentException quando o desconto e nulo ou negativo
+     */
+    public BigDecimal applyDiscount(BigDecimal discount) {
+        if (discount == null || discount.signum() < 0) {
+            throw new IllegalArgumentException("desconto nao pode ser nulo ou negativo");
+        }
+
+        BigDecimal subtotal = subtotal();
+        this.discountAmount = discount.compareTo(subtotal) > 0 ? subtotal : discount;
+
+        return calculateTotal();
+    }
+
+    /**
+     * Acrescenta um desconto ao valor ja aplicado, como no resgate de pontos
+     * sobre um pedido que ja recebeu promocao.
+     *
+     * @param extra valor adicional de desconto
+     * @return total recalculado
+     * @throws IllegalArgumentException quando o desconto e nulo ou negativo
+     */
+    public BigDecimal addDiscount(BigDecimal extra) {
+        if (extra == null || extra.signum() < 0) {
+            throw new IllegalArgumentException("desconto nao pode ser nulo ou negativo");
+        }
+
+        BigDecimal current = discountAmount == null ? BigDecimal.ZERO : discountAmount;
+        return applyDiscount(current.add(extra));
     }
 
     /**
@@ -269,6 +317,14 @@ public class Order {
 
     public void setIdempotencyKey(String idempotencyKey) {
         this.idempotencyKey = idempotencyKey;
+    }
+
+    public Promotion getPromotion() {
+        return promotion;
+    }
+
+    public void setPromotion(Promotion promotion) {
+        this.promotion = promotion;
     }
 
 }

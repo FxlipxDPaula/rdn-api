@@ -15,11 +15,11 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 /**
  * Executa o DDL real do Flyway sobre um banco vazio.
  *
- * <p>Objetivo: garantir que {@code V1__schema.sql}, {@code V2__seed.sql},
- * {@code V3__seed_users.sql} e {@code V4__add_awaiting_payment_status.sql} sao
- * aplicaveis do zero, que os seeds produzem os registros esperados e que a
- * constraint de status aceita o novo valor {@code AGUARDANDO_PAGAMENTO}, sem
- * depender de um PostgreSQL rodando na maquina de desenvolvimento.</p>
+ * <p>Objetivo: garantir que {@code V1__schema.sql} a
+ * {@code V5__loyalty_promotion_audit.sql} sao aplicaveis do zero, que os seeds
+ * produzem os registros esperados e que as constraints de status e de sinal dos
+ * pontos refletem o codigo, sem depender de um PostgreSQL rodando na maquina de
+ * desenvolvimento.</p>
  */
 class SchemaDdlTest {
 
@@ -35,6 +35,7 @@ class SchemaDdlTest {
         populator.addScript(new ClassPathResource("db/migration/V2__seed.sql"));
         populator.addScript(new ClassPathResource("db/migration/V3__seed_users.sql"));
         populator.addScript(new ClassPathResource("db/migration/V4__add_awaiting_payment_status.sql"));
+        populator.addScript(new ClassPathResource("db/migration/V5__loyalty_promotion_audit.sql"));
         populator.execute(dataSource);
 
         try (Connection connection = dataSource.getConnection();
@@ -44,6 +45,10 @@ class SchemaDdlTest {
             assertThat(count(statement, "menu_items")).isEqualTo(3);
             assertThat(count(statement, "inventory_items")).isEqualTo(3);
             assertThat(count(statement, "inventory_movements")).isEqualTo(3);
+            assertThat(count(statement, "promotions")).isEqualTo(3);
+            assertThat(count(statement, "audit_logs")).isZero();
+
+            assertThat(columnExists(statement, "orders", "promotion_id")).isTrue();
 
             assertThat(count(statement, "users")).isEqualTo(4);
             assertThat(countUsersWithBcryptHash(statement)).isEqualTo(4);
@@ -56,6 +61,19 @@ class SchemaDdlTest {
                     .contains("AGUARDANDO_PAGAMENTO")
                     .contains("RECEIVED")
                     .doesNotContain("PENDING");
+            assertThat(checkClause(statement, "ck_loyalty_tx_sign"))
+                    .contains("EARNED")
+                    .contains("REDEEMED");
+        }
+    }
+
+    private static boolean columnExists(Statement statement, String table, String column)
+            throws Exception {
+        try (ResultSet resultSet = statement.executeQuery(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS "
+                        + "WHERE TABLE_NAME = '" + table + "' AND COLUMN_NAME = '" + column + "'")) {
+            resultSet.next();
+            return resultSet.getLong(1) > 0;
         }
     }
 

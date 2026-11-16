@@ -5,6 +5,9 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.rdn.rdn_api.application.audit.AuditAction;
+import com.rdn.rdn_api.application.audit.AuditEntry;
+import com.rdn.rdn_api.application.audit.AuditGateway;
 import com.rdn.rdn_api.application.auth.AuthenticatedUser;
 import com.rdn.rdn_api.application.order.exception.InvalidStatusTransitionException;
 import com.rdn.rdn_api.application.order.exception.OperationNotAllowedException;
@@ -25,8 +28,11 @@ public class ChangeOrderStatusService {
 
     private final OrderGateway orderGateway;
 
-    public ChangeOrderStatusService(OrderGateway orderGateway) {
+    private final AuditGateway auditGateway;
+
+    public ChangeOrderStatusService(OrderGateway orderGateway, AuditGateway auditGateway) {
         this.orderGateway = orderGateway;
+        this.auditGateway = auditGateway;
     }
 
     /**
@@ -58,7 +64,27 @@ public class ChangeOrderStatusService {
             throw new InvalidStatusTransitionException(pedidoId, anterior, command.status());
         }
 
-        return orderGateway.save(order);
+        Order saved = orderGateway.save(order);
+        auditStatusChange(saved, anterior, principal);
+
+        return saved;
+    }
+
+    private void auditStatusChange(Order order, OrderStatus anterior, AuthenticatedUser principal) {
+        AuditAction action = OrderStatus.CANCELLED == order.getStatus()
+                ? AuditAction.ORDER_CANCELLED
+                : AuditAction.ORDER_STATUS_CHANGED;
+        String details = (anterior == null ? "null" : anterior) + "->" + order.getStatus();
+        if (order.getCancellationReason() != null) {
+            details = details + " motivo=" + order.getCancellationReason();
+        }
+
+        UUID actorId = principal == null ? null : principal.id();
+        String actorEmail = principal == null ? null : principal.email();
+        UserRole actorRole = principal == null ? null : principal.role();
+
+        auditGateway.record(new AuditEntry(actorId, actorEmail, actorRole, action, "ORDER",
+                order.getId(), details));
     }
 
     private static void checkPermission(Order order, OrderStatus target, AuthenticatedUser principal) {

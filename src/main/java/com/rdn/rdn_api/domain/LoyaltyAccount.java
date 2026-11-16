@@ -26,6 +26,15 @@ public class LoyaltyAccount {
     }
 
     /**
+     * Informa se o cliente consentiu com o tratamento de dados para fidelidade.
+     *
+     * @return {@code true} quando o consentimento esta ativo
+     */
+    public boolean hasConsent() {
+        return Boolean.TRUE.equals(consentGiven);
+    }
+
+    /**
      * Registra o consentimento do cliente e o respectivo instante.
      */
     public void optIn() {
@@ -47,7 +56,7 @@ public class LoyaltyAccount {
      * @param points quantidade de pontos a adicionar
      */
     public void addPoints(Integer points) {
-        if (points == null) {
+        if (points == null || points <= 0) {
             return;
         }
 

@@ -31,7 +31,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, UUID> 
 
     boolean existsByIdempotencyKey(String idempotencyKey);
 
-    @EntityGraph(attributePaths = {"items", "items.menuItem", "customer", "branch"})
+    @EntityGraph(attributePaths = {"items", "items.menuItem", "customer", "branch", "promotion"})
     Optional<OrderJpaEntity> findWithItemsById(UUID id);
 
 }

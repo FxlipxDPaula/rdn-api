@@ -17,6 +17,7 @@ import jakarta.validation.constraints.NotNull;
  * @param unidadeId      unidade que produz o pedido
  * @param clienteId      cliente informado por STAFF/ADMIN; ignorado para CUSTOMER
  * @param formaPagamento forma de pagamento; {@code MOCK} deixa o pedido aguardando pagamento
+ * @param promocaoId     campanha opcional aplicada ao pedido
  * @param itens          itens solicitados
  */
 public record CreateOrderRequest(
@@ -24,5 +25,6 @@ public record CreateOrderRequest(
         @NotNull(message = "unidadeId e obrigatorio") UUID unidadeId,
         UUID clienteId,
         @NotNull(message = "formaPagamento e obrigatoria") PaymentMethod formaPagamento,
+        UUID promocaoId,
         @NotEmpty(message = "itens deve ter pelo menos um item") @Valid List<CreateOrderItemRequest> itens) {
 }

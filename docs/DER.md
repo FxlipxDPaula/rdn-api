@@ -22,6 +22,7 @@ erDiagram
     ORDERS ||--o{ ORDER_ITEMS : "contem"
     MENU_ITEMS ||--o{ ORDER_ITEMS : "referenciado_por"
     ORDERS ||--o{ PAYMENTS : "cobra"
+    PROMOTIONS ||--o{ ORDERS : "aplicada_em"
 
     LOYALTY_ACCOUNTS ||--o{ LOYALTY_TRANSACTIONS : "lancamentos"
     ORDERS ||--o{ LOYALTY_TRANSACTIONS : "origina"
@@ -83,6 +84,7 @@ erDiagram
         uuid id PK
         uuid customer_id FK
         uuid branch_id FK
+        uuid promotion_id FK
         varchar origin_channel
         varchar status
         numeric total_amount
@@ -125,6 +127,7 @@ erDiagram
         uuid order_id FK
         integer points
         varchar type
+        timestamp created_at
     }
 
     PROMOTIONS {
@@ -145,6 +148,19 @@ erDiagram
         timestamp issued_at
         timestamp expires_at
     }
+
+    AUDIT_LOGS {
+        uuid id PK
+        timestamp occurred_at
+        uuid actor_id
+        varchar actor_email
+        varchar actor_role
+        varchar action
+        varchar resource
+        uuid resource_id
+        varchar details
+        varchar ip_address
+    }
 ```
 
 ## Restrições relevantes
@@ -162,6 +178,9 @@ erDiagram
 | Idempotência de pedido e de pagamento | `uk_orders_idempotency_key`, `uk_payments_idempotency_key` |
 | Token guardado como hash | `auth_sessions.token_hash` |
 | Pontos nunca negativos | `ck_loyalty_points` |
+| Promoção aplicada é registrada no pedido | `orders.promotion_id` FK |
+| Extrato de fidelidade tem sinal coerente | `ck_loyalty_tx_sign` |
+| Auditoria guarda o ator como snapshot, sem FK | `audit_logs.actor_id` + `actor_email` |
 
 ## Decisões de modelagem
 
@@ -171,8 +190,16 @@ erDiagram
   tentativas (aprovada, recusada, falha) sem alterar o pedido.
 - **Item de pedido guarda preço unitário**: alteração futura no cardápio não
   reescreve o histórico financeiro.
+- **Promoção aplicada no agregado**: `orders.promotion_id` registra a campanha
+  usada e `discount_amount` guarda o valor; o cálculo continua no domínio.
+- **Pontos assinados no extrato**: `EARNED` grava positivo e `REDEEMED`/`EXPIRED`
+  gravam negativo, permitindo conferir o saldo por soma.
+- **Auditoria é trilha à parte**: `audit_logs` não tem FK para `users` e guarda
+  apenas snapshot do ator e detalhe curto, sem senha, token ou payload completo.
 - **`occurred_at`** substitui `timestamp` como nome de coluna em
   `inventory_movements` para não colidir com palavra reservada.
 - **Seed de usuários adiado**: `password_hash` exige BCrypt, dependência que
   entra com a camada de segurança. A migration seguinte cria os usuários com
   hash válido gerado por `BCryptPasswordEncoder`.
+- **Campanhas na `V5`**: três promoções fixas, sendo uma expirada de propósito
+  para o teste negativo de `PROMOCAO_NAO_APLICAVEL`.

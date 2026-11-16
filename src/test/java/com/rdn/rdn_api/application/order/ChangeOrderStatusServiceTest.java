@@ -14,6 +14,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.rdn.rdn_api.application.audit.AuditGateway;
 import com.rdn.rdn_api.application.auth.AuthenticatedUser;
 import com.rdn.rdn_api.application.order.exception.InvalidStatusTransitionException;
 import com.rdn.rdn_api.application.order.exception.OperationNotAllowedException;
@@ -35,11 +36,13 @@ class ChangeOrderStatusServiceTest {
 
     private final OrderGateway orderGateway = mock(OrderGateway.class);
 
+    private final AuditGateway auditGateway = mock(AuditGateway.class);
+
     private ChangeOrderStatusService service;
 
     @BeforeEach
     void setUp() {
-        service = new ChangeOrderStatusService(orderGateway);
+        service = new ChangeOrderStatusService(orderGateway, auditGateway);
         when(orderGateway.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 

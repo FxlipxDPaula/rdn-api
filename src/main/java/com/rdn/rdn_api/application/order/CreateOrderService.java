@@ -10,15 +10,21 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.rdn.rdn_api.application.audit.AuditAction;
+import com.rdn.rdn_api.application.audit.AuditEntry;
+import com.rdn.rdn_api.application.audit.AuditGateway;
 import com.rdn.rdn_api.application.auth.AuthenticatedUser;
 import com.rdn.rdn_api.application.order.CreateOrderCommand.CreateOrderItemCommand;
 import com.rdn.rdn_api.application.order.exception.InsufficientStockException;
 import com.rdn.rdn_api.application.order.exception.ResourceNotFoundException;
+import com.rdn.rdn_api.application.promotion.PromotionGateway;
+import com.rdn.rdn_api.application.promotion.exception.PromotionNotApplicableException;
 import com.rdn.rdn_api.domain.Branch;
 import com.rdn.rdn_api.domain.MenuItem;
 import com.rdn.rdn_api.domain.Order;
 import com.rdn.rdn_api.domain.OrderStatus;
 import com.rdn.rdn_api.domain.PaymentMethod;
+import com.rdn.rdn_api.domain.Promotion;
 import com.rdn.rdn_api.domain.User;
 import com.rdn.rdn_api.domain.UserRole;
 
@@ -41,12 +47,19 @@ public class CreateOrderService {
 
     private final InventoryGateway inventoryGateway;
 
+    private final PromotionGateway promotionGateway;
+
+    private final AuditGateway auditGateway;
+
     public CreateOrderService(OrderGateway orderGateway, CatalogGateway catalogGateway,
-            CustomerGateway customerGateway, InventoryGateway inventoryGateway) {
+            CustomerGateway customerGateway, InventoryGateway inventoryGateway,
+            PromotionGateway promotionGateway, AuditGateway auditGateway) {
         this.orderGateway = orderGateway;
         this.catalogGateway = catalogGateway;
         this.customerGateway = customerGateway;
         this.inventoryGateway = inventoryGateway;
+        this.promotionGateway = promotionGateway;
+        this.auditGateway = auditGateway;
     }
 
     /**
@@ -83,8 +96,11 @@ public class CreateOrderService {
             order.addItem(menuItem, entry.getValue());
         }
 
-        // 2) total calculado pelo dominio, nunca recebido do cliente
-        order.calculateTotal();
+        // 2) desconto de promocao calculado pelo dominio, nunca recebido do cliente
+        Promotion promotion = applyPromotion(command.promocaoId(), order);
+        if (promotion == null) {
+            order.calculateTotal();
+        }
 
         // 3) baixa de estoque por unidade, com lock na linha
         String notes = "Baixa por pedido do canal " + command.canalPedido();
@@ -104,7 +120,51 @@ public class CreateOrderService {
             order.changeStatus(OrderStatus.RECEIVED);
         }
 
-        return orderGateway.save(order);
+        Order saved = orderGateway.save(order);
+        auditOrderCreated(saved, promotion, principal);
+
+        return saved;
+    }
+
+    private Promotion applyPromotion(UUID promocaoId, Order order) {
+        if (promocaoId == null) {
+            return null;
+        }
+
+        Promotion promotion = promotionGateway.findById(promocaoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Promocao", promocaoId));
+
+        if (!Boolean.TRUE.equals(promotion.isValidFor(order))) {
+            throw new PromotionNotApplicableException(
+                    "Promocao " + promotion.getTitle() + " nao esta vigente ou nao atende ao valor minimo.");
+        }
+
+        order.applyDiscount(promotion.applyDiscount(order));
+        order.setPromotion(promotion);
+
+        return promotion;
+    }
+
+    private void auditOrderCreated(Order order, Promotion promotion, AuthenticatedUser principal) {
+        String details = "canal=" + order.getOriginChannel() + " total=" + order.getTotalAmount();
+        auditGateway.record(auditEntry(principal, AuditAction.ORDER_CREATED, order.getId(), details));
+
+        if (promotion != null) {
+            String promotionDetails = "promocao=" + promotion.getId()
+                    + " desconto=" + order.getDiscountAmount();
+            auditGateway.record(auditEntry(principal, AuditAction.PROMOTION_APPLIED, order.getId(),
+                    promotionDetails));
+        }
+    }
+
+    private static AuditEntry auditEntry(AuthenticatedUser principal, AuditAction action, UUID resourceId,
+            String details) {
+        if (principal == null) {
+            return new AuditEntry(null, null, null, action, "ORDER", resourceId, details);
+        }
+
+        return new AuditEntry(principal.id(), principal.email(), principal.role(), action, "ORDER",
+                resourceId, details);
     }
 
     private User resolveCustomer(UUID clienteId, AuthenticatedUser principal) {

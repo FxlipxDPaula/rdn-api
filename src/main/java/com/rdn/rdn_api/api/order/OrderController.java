@@ -23,6 +23,11 @@ import com.rdn.rdn_api.application.order.QueryOrderService;
 import com.rdn.rdn_api.domain.OrderStatus;
 import com.rdn.rdn_api.domain.SalesChannel;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 /**
@@ -33,6 +38,8 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/pedidos")
+@Tag(name = "Pedidos", description = "Criacao, consulta e mudanca de status")
+@SecurityRequirement(name = "bearerAuth")
 public class OrderController {
 
     private final CreateOrderService createOrderService;
@@ -57,6 +64,15 @@ public class OrderController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Cria pedido com desconto opcional de promocao")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Pedido criado"),
+            @ApiResponse(responseCode = "400", description = "Dados invalidos"),
+            @ApiResponse(responseCode = "401", description = "Nao autenticado"),
+            @ApiResponse(responseCode = "403", description = "Perfil sem permissao"),
+            @ApiResponse(responseCode = "404", description = "Unidade, produto ou promocao inexistente"),
+            @ApiResponse(responseCode = "409", description = "Estoque insuficiente ou promocao nao aplicavel")
+    })
     public OrderResponse create(@Valid @RequestBody CreateOrderRequest request,
             @AuthenticationPrincipal AuthenticatedUser principal) {
 
@@ -65,6 +81,7 @@ public class OrderController {
                 request.unidadeId(),
                 request.clienteId(),
                 request.formaPagamento(),
+                request.promocaoId(),
                 request.itens().stream()
                         .map(item -> new CreateOrderCommand.CreateOrderItemCommand(
                                 item.produtoId(), item.quantidade(), item.observacao()))
@@ -83,6 +100,13 @@ public class OrderController {
      * @return pagina de resumos
      */
     @GetMapping
+    @Operation(summary = "Lista pedidos com filtro por canal e status")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pagina de pedidos"),
+            @ApiResponse(responseCode = "400", description = "Parametro invalido"),
+            @ApiResponse(responseCode = "401", description = "Nao autenticado"),
+            @ApiResponse(responseCode = "403", description = "Perfil sem permissao")
+    })
     public PageResponse<OrderSummaryResponse> list(
             @RequestParam(required = false) SalesChannel canalPedido,
             @RequestParam(required = false) OrderStatus status,
@@ -101,6 +125,13 @@ public class OrderController {
      * @return pedido completo
      */
     @GetMapping("/{id}")
+    @Operation(summary = "Consulta pedido com itens")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pedido encontrado"),
+            @ApiResponse(responseCode = "401", description = "Nao autenticado"),
+            @ApiResponse(responseCode = "403", description = "Pedido de outro cliente"),
+            @ApiResponse(responseCode = "404", description = "Pedido inexistente")
+    })
     public OrderResponse findById(@PathVariable UUID id,
             @AuthenticationPrincipal AuthenticatedUser principal) {
         return OrderResponse.from(queryOrderService.findById(id, principal));
@@ -115,6 +146,15 @@ public class OrderController {
      * @return pedido atualizado
      */
     @PatchMapping("/{id}/status")
+    @Operation(summary = "Aplica transicao de status validada pelo dominio")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Status atualizado"),
+            @ApiResponse(responseCode = "400", description = "Status nulo"),
+            @ApiResponse(responseCode = "401", description = "Nao autenticado"),
+            @ApiResponse(responseCode = "403", description = "Perfil sem permissao"),
+            @ApiResponse(responseCode = "404", description = "Pedido inexistente"),
+            @ApiResponse(responseCode = "409", description = "Transicao invalida")
+    })
     public OrderResponse changeStatus(@PathVariable UUID id,
             @Valid @RequestBody ChangeOrderStatusRequest request,
             @AuthenticationPrincipal AuthenticatedUser principal) {

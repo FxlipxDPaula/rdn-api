@@ -26,6 +26,17 @@ public final class LoyaltyAccountMapper {
         return account;
     }
 
+    public static LoyaltyAccountJpaEntity toEntity(LoyaltyAccount domain) {
+        if (domain == null) {
+            return null;
+        }
+
+        LoyaltyAccountJpaEntity entity = new LoyaltyAccountJpaEntity();
+        copyScalarsToEntity(domain, entity);
+
+        return entity;
+    }
+
     public static void copyScalarsToEntity(LoyaltyAccount domain,
             LoyaltyAccountJpaEntity entity) {
         entity.setId(domain.getId());

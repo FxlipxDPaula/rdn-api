@@ -20,6 +20,11 @@ import com.rdn.rdn_api.application.payment.PaymentResult;
 import com.rdn.rdn_api.application.payment.QueryPaymentService;
 import com.rdn.rdn_api.application.payment.RequestPaymentService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 /**
@@ -31,6 +36,8 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/pedidos/{pedidoId}/pagamentos")
+@Tag(name = "Pagamentos", description = "Cobranca no provedor mock e historico de tentativas")
+@SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
 
     private final RequestPaymentService requestPaymentService;
@@ -53,6 +60,16 @@ public class PaymentController {
      * @return {@code 201} na primeira tentativa, {@code 200} em replay
      */
     @PostMapping
+    @Operation(summary = "Solicita pagamento com Idempotency-Key")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Tentativa criada"),
+            @ApiResponse(responseCode = "200", description = "Replay da mesma chave"),
+            @ApiResponse(responseCode = "400", description = "Cabecalho ou corpo invalido"),
+            @ApiResponse(responseCode = "401", description = "Nao autenticado"),
+            @ApiResponse(responseCode = "403", description = "Pedido de outro cliente"),
+            @ApiResponse(responseCode = "404", description = "Pedido inexistente"),
+            @ApiResponse(responseCode = "409", description = "Pedido fora de cobranca ou chave conflitante")
+    })
     public ResponseEntity<PaymentResponse> request(@PathVariable UUID pedidoId,
             @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey,
             @Valid @RequestBody RequestPaymentRequest request,
@@ -73,6 +90,13 @@ public class PaymentController {
      * @return tentativas, da mais recente para a mais antiga
      */
     @GetMapping
+    @Operation(summary = "Lista tentativas de pagamento do pedido")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Historico decrescente"),
+            @ApiResponse(responseCode = "401", description = "Nao autenticado"),
+            @ApiResponse(responseCode = "403", description = "Pedido de outro cliente"),
+            @ApiResponse(responseCode = "404", description = "Pedido inexistente")
+    })
     public List<PaymentResponse> history(@PathVariable UUID pedidoId,
             @AuthenticationPrincipal AuthenticatedUser principal) {
 

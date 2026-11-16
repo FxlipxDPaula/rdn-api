@@ -17,6 +17,7 @@ import com.rdn.rdn_api.domain.SalesChannel;
  * @param unidadeId      unidade que produz o pedido
  * @param clienteId      cliente informado por STAFF/ADMIN; ignorado para CUSTOMER
  * @param formaPagamento forma de pagamento; {@code MOCK} cria o pedido aguardando pagamento
+ * @param promocaoId     campanha aplicada, quando informada
  * @param itens          itens solicitados
  */
 public record CreateOrderCommand(
@@ -24,6 +25,7 @@ public record CreateOrderCommand(
         UUID unidadeId,
         UUID clienteId,
         PaymentMethod formaPagamento,
+        UUID promocaoId,
         List<CreateOrderItemCommand> itens) {
 
     public CreateOrderCommand {
