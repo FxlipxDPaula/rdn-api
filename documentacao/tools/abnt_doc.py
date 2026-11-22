@@ -51,10 +51,10 @@ CITY = "Caxias do Sul - RS"
 PROJECT = "PROJETO MULTIDISCIPLINAR"
 TRACK = "TRILHA BACK-END"
 
-# Preencher antes de gerar o PDF final de submissao.
-INSTITUTION = "[INSTITUICAO DE ENSINO]"
-COURSE = "[CURSO]"
-RU = "RU: [PREENCHER]"
+# Dados da capa ABNT (preenchidos para a submissao).
+INSTITUTION = "CENTRO UNIVERSITÁRIO INTERNACIONAL UNINTER"
+COURSE = "ANÁLISE E DESENVOLVIMENTO DE SISTEMAS"
+RU = "RU: 4885643"
 PROFESSOR = "Prof. Me. Luciane Yanase Kanashiro"
 
 BODY = ParagraphStyle(

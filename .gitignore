@@ -39,4 +39,8 @@ __pycache__/
 *.py[cod]
 
 # Roteiro da disciplina (arquivo local de referencia, nao versionar)
-docs/Roteiro Atividade Pratica.pdf
+documentacao/docs/Roteiro Atividade Pratica.pdf
+
+# Copia de submissao com RU (dado pessoal, nao versionar)
+*_Projeto_Back_End.PDF
+*_Projeto_Back_End.pdf

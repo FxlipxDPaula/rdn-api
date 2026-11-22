@@ -42,7 +42,7 @@ MARGIN_TOP = 3 * cm
 MARGIN_BOTTOM = 2 * cm
 TEXT_WIDTH = PAGE_W - MARGIN_LEFT - MARGIN_RIGHT
 
-OUTPUT = "docs/etapa-2-seguranca-abnt.pdf"
+OUTPUT = "documentacao/docs/etapa-2-seguranca-abnt.pdf"
 AUTHOR = "Felipe D'Paula"
 YEAR = "2026"
 

@@ -5,7 +5,7 @@
 Uso:
     python tools/render_diagrams.py
 
-Os arquivos sao gravados em docs/diagrams/. O script nao depende de PlantUML,
+Os arquivos sao gravados em documentacao/docs/diagrams/. O script nao depende de PlantUML,
 Graphviz, Node ou JDK: apenas Pillow, que ja e usado pelo ReportLab.
 """
 
@@ -14,7 +14,7 @@ import os
 
 from PIL import Image, ImageDraw, ImageFont
 
-OUTPUT_DIR = os.path.join("docs", "diagrams")
+OUTPUT_DIR = os.path.join("documentacao", "docs", "diagrams")
 
 BG = "#FFFFFF"
 INK = "#1F2937"

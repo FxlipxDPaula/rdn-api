@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from abnt_doc import AbntReport  # noqa: E402
 
-OUTPUT = "docs/etapa-5-fidelidade-promocoes-auditoria-abnt.pdf"
+OUTPUT = "documentacao/docs/etapa-5-fidelidade-promocoes-auditoria-abnt.pdf"
 
 
 def build():

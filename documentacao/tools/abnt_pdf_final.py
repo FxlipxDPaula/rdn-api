@@ -14,9 +14,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from abnt_doc import AbntReport  # noqa: E402
 
-OUTPUT = "docs/projeto-back-end-final-abnt.pdf"
+OUTPUT = "documentacao/docs/projeto-back-end-final-abnt.pdf"
 REPO_URL = "https://github.com/FxlipxDPaula/rdn-api"
-FIG_DIR = os.path.join("docs", "diagrams")
+FIG_DIR = os.path.join("documentacao", "docs", "diagrams")
 
 
 def fig(name):
@@ -126,7 +126,8 @@ def build():
 
     report.h2("DER e modelo de dados")
     report.p(
-        "O modelo completo esta descrito em docs/DER.md. As entidades principais sao users, branches, "
+        "O modelo completo esta descrito em documentacao/docs/DER.md. As entidades principais sao "
+        "users, branches, "
         "menus, menu_items, inventory_items, inventory_movements, orders, order_items, payments, "
         "loyalty_accounts, loyalty_transactions, promotions, auth_sessions e audit_logs.",
     )
@@ -361,10 +362,10 @@ def build():
             ["OpenAPI JSON", "http://localhost:8080/v3/api-docs"],
             ["Colecao Postman", "postman/rdn-api.postman_collection.json"],
             ["Environment Postman", "postman/rdn-api.postman_environment.json"],
-            ["DER", "docs/DER.md"],
-            ["Diagramas", "docs/diagrams/*.png e tools/render_diagrams.py"],
-            ["Relatorios por etapa", "docs/etapa-1 a docs/etapa-5"],
-            ["Relatorio final", "docs/projeto-back-end-final-abnt.pdf"],
+            ["DER", "documentacao/docs/DER.md"],
+            ["Diagramas", "documentacao/docs/diagrams/*.png e documentacao/tools/render_diagrams.py"],
+            ["Relatorios por etapa", "documentacao/docs/etapa-1 a etapa-5"],
+            ["Relatorio final", "documentacao/docs/projeto-back-end-final-abnt.pdf"],
         ],
         widths=[0.34, 0.66],
     )
@@ -489,8 +490,8 @@ def build():
     )
     report.p(
         "Novos usuarios podem ser criados por POST /usuarios com o token do ADMIN. "
-        "A entrega final deve ser renomeada para o padrao solicitado no roteiro: "
-        "RU_Projeto_Back_End.PDF.",
+        "A entrega final foi renomeada para o padrao solicitado no roteiro: "
+        "4885643_Projeto_Back_End.PDF.",
     )
 
     return report.save()

@@ -1,6 +1,6 @@
 # DER — Modelo de dados do rdn-api
 
-Diagrama derivado de [`V1__schema.sql`](../src/main/resources/db/migration/V1__schema.sql:1)
+Diagrama derivado de [`V1__schema.sql`](../../src/main/resources/db/migration/V1__schema.sql:1)
 e do mapeamento JPA em `src/main/java/com/rdn/rdn_api/infrastructure/persistence/entity/`.
 O banco alvo é PostgreSQL; os tipos foram escolhidos para também rodarem em H2
 (modo PostgreSQL) nos testes.

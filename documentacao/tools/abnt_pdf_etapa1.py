@@ -32,7 +32,7 @@ from abnt_pdf import (
 from reportlab.lib.units import cm
 from reportlab.platypus import PageBreak, Spacer
 
-OUTPUT = "docs/etapa-1-persistencia-abnt.pdf"
+OUTPUT = "documentacao/docs/etapa-1-persistencia-abnt.pdf"
 
 
 # ---------------------------------------------------------------------- capa
@@ -630,7 +630,7 @@ def other_files():
                 ["application.properties", "Datasource por vari\u00e1vel de ambiente, validate e open-in-view=false"],
                 ["application.properties (teste)", "Substitui o de produ\u00e7\u00e3o nos testes: H2 e Flyway desligado"],
                 ["V2__seed.sql", "Filial, card\u00e1pio, 3 itens, estoque e 3 movimentos INBOUND"],
-                ["docs/DER.md e plans/01", "DER em Mermaid e registro das decis\u00f5es da etapa"],
+                ["documentacao/docs/DER.md e documentacao/plans/01", "DER em Mermaid e registro das decis\u00f5es da etapa"],
             ],
             [6.0 * cm, 10.0 * cm],
         ),
@@ -787,7 +787,7 @@ void recusaSaidaMaiorQueOSaldoEIndicaIndisponibilidade() {
         item("OrderStatus: adicionar PARTIALLY_READY."),
         item("ALLOWED_TRANSITIONS: PREPARING para PARTIALLY_READY; PARTIALLY_READY para READY ou CANCELLED."),
         item("Nova migration: n\u00e3o editar V1; \u00e9 preciso remover e recriar a constraint de status com a nova lista."),
-        item("docs/DER.md: atualizar o enum documentado."),
+        item("documentacao/docs/DER.md: atualizar o enum documentado."),
         item("Testes: um caso v\u00e1lido novo e um inv\u00e1lido (PARTIALLY_READY para DELIVERED)."),
         p(
             "<i>Gabarito:</i> a lista acima. O ponto cr\u00edtico \u00e9 que editar V1 depois de aplicada "
