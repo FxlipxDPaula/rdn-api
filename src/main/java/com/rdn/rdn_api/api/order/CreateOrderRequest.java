@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.rdn.rdn_api.domain.PaymentMethod;
 import com.rdn.rdn_api.domain.SalesChannel;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -21,10 +22,28 @@ import jakarta.validation.constraints.NotNull;
  * @param itens          itens solicitados
  */
 public record CreateOrderRequest(
-        @NotNull(message = "canalPedido e obrigatorio") SalesChannel canalPedido,
-        @NotNull(message = "unidadeId e obrigatorio") UUID unidadeId,
+        @NotNull(message = "canalPedido e obrigatorio")
+        @Schema(description = "Canal de origem do pedido (multicanalidade)", example = "TOTEM")
+        SalesChannel canalPedido,
+
+        @NotNull(message = "unidadeId e obrigatorio")
+        @Schema(description = "Unidade que produz o pedido",
+                example = "00000000-0000-0000-0000-000000000001")
+        UUID unidadeId,
+
+        @Schema(description = "Cliente informado por STAFF ou ADMIN; ignorado para CUSTOMER",
+                example = "00000000-0000-0000-0000-00000000000f")
         UUID clienteId,
-        @NotNull(message = "formaPagamento e obrigatoria") PaymentMethod formaPagamento,
+
+        @NotNull(message = "formaPagamento e obrigatoria")
+        @Schema(description = "Forma de pagamento; MOCK deixa o pedido aguardando pagamento", example = "MOCK")
+        PaymentMethod formaPagamento,
+
+        @Schema(description = "Campanha opcional aplicada ao pedido",
+                example = "00000000-0000-0000-0000-0000000000c1")
         UUID promocaoId,
-        @NotEmpty(message = "itens deve ter pelo menos um item") @Valid List<CreateOrderItemRequest> itens) {
+
+        @NotEmpty(message = "itens deve ter pelo menos um item") @Valid
+        @Schema(description = "Itens solicitados; pelo menos um item")
+        List<CreateOrderItemRequest> itens) {
 }

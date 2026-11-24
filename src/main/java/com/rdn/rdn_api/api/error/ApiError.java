@@ -3,6 +3,8 @@ package com.rdn.rdn_api.api.error;
 import java.time.Instant;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Corpo unico de erro da API.
  *
@@ -17,10 +19,20 @@ import java.util.List;
  * @param path      caminho da requisicao
  */
 public record ApiError(
+        @Schema(description = "Codigo estavel do erro", example = "ESTOQUE_INSUFICIENTE")
         String error,
+
+        @Schema(description = "Mensagem legivel para o cliente",
+                example = "Nao ha quantidade suficiente para um ou mais itens.")
         String message,
+
+        @Schema(description = "Problemas por campo; lista vazia quando nao se aplica")
         List<ApiErrorDetail> details,
+
+        @Schema(description = "Instante da falha em UTC", example = "2026-11-16T12:00:00Z")
         Instant timestamp,
+
+        @Schema(description = "Caminho da requisicao que falhou", example = "/pedidos")
         String path) {
 
     /**

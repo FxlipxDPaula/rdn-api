@@ -21,6 +21,7 @@ import com.rdn.rdn_api.application.payment.QueryPaymentService;
 import com.rdn.rdn_api.application.payment.RequestPaymentService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -60,7 +61,10 @@ public class PaymentController {
      * @return {@code 201} na primeira tentativa, {@code 200} em replay
      */
     @PostMapping
-    @Operation(summary = "Solicita pagamento com Idempotency-Key")
+    @Operation(summary = "Solicita pagamento com Idempotency-Key",
+            description = "Envia a cobranca ao provedor simulado. A primeira tentativa responde 201; "
+                    + "repetir a mesma Idempotency-Key responde 200 com a tentativa original, sem criar "
+                    + "cobranca duplicada.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Tentativa criada"),
             @ApiResponse(responseCode = "200", description = "Replay da mesma chave"),
@@ -70,7 +74,12 @@ public class PaymentController {
             @ApiResponse(responseCode = "404", description = "Pedido inexistente"),
             @ApiResponse(responseCode = "409", description = "Pedido fora de cobranca ou chave conflitante")
     })
-    public ResponseEntity<PaymentResponse> request(@PathVariable UUID pedidoId,
+    public ResponseEntity<PaymentResponse> request(
+            @Parameter(description = "Identificador do pedido a cobrar",
+                    example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+            @PathVariable UUID pedidoId,
+            @Parameter(description = "Chave de idempotencia da cobranca; repetir devolve a tentativa original",
+                    example = "9f8c1d2e-4b3a-4c5d-8e7f-0a1b2c3d4e5f")
             @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey,
             @Valid @RequestBody RequestPaymentRequest request,
             @AuthenticationPrincipal AuthenticatedUser principal) {
@@ -90,14 +99,18 @@ public class PaymentController {
      * @return tentativas, da mais recente para a mais antiga
      */
     @GetMapping
-    @Operation(summary = "Lista tentativas de pagamento do pedido")
+    @Operation(summary = "Lista tentativas de pagamento do pedido",
+            description = "Historico em ordem decrescente de solicitacao, com status, valor e "
+                    + "identificador da transacao no provedor.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Historico decrescente"),
             @ApiResponse(responseCode = "401", description = "Nao autenticado"),
             @ApiResponse(responseCode = "403", description = "Pedido de outro cliente"),
             @ApiResponse(responseCode = "404", description = "Pedido inexistente")
     })
-    public List<PaymentResponse> history(@PathVariable UUID pedidoId,
+    public List<PaymentResponse> history(
+            @Parameter(description = "Identificador do pedido", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+            @PathVariable UUID pedidoId,
             @AuthenticationPrincipal AuthenticatedUser principal) {
 
         return queryPaymentService.listByOrder(pedidoId, principal).stream()

@@ -24,6 +24,7 @@ import com.rdn.rdn_api.domain.OrderStatus;
 import com.rdn.rdn_api.domain.SalesChannel;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -64,7 +65,10 @@ public class OrderController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Cria pedido com desconto opcional de promocao")
+    @Operation(summary = "Cria pedido com desconto opcional de promocao",
+            description = "Exige canalPedido (APP, TOTEM, BALCAO, PICKUP ou WEB), valida o catalogo e o "
+                    + "estoque da unidade e aplica a promocao quando informada. O pedido nasce em "
+                    + "AGUARDANDO_PAGAMENTO e o total e calculado pelo dominio.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Pedido criado"),
             @ApiResponse(responseCode = "400", description = "Dados invalidos"),
@@ -100,7 +104,9 @@ public class OrderController {
      * @return pagina de resumos
      */
     @GetMapping
-    @Operation(summary = "Lista pedidos com filtro por canal e status")
+    @Operation(summary = "Lista pedidos com filtro por canal e status",
+            description = "Consulta paginada para ADMIN e STAFF, usada para consolidar os pedidos por "
+                    + "canal de origem e acompanhar o fluxo operacional.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Pagina de pedidos"),
             @ApiResponse(responseCode = "400", description = "Parametro invalido"),
@@ -108,9 +114,13 @@ public class OrderController {
             @ApiResponse(responseCode = "403", description = "Perfil sem permissao")
     })
     public PageResponse<OrderSummaryResponse> list(
+            @Parameter(description = "Filtra pelo canal de origem do pedido", example = "TOTEM")
             @RequestParam(required = false) SalesChannel canalPedido,
+            @Parameter(description = "Filtra pelo status atual do pedido", example = "AGUARDANDO_PAGAMENTO")
             @RequestParam(required = false) OrderStatus status,
+            @Parameter(description = "Pagina da listagem, comecando em zero", example = "0")
             @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Quantidade de pedidos por pagina", example = "10")
             @RequestParam(defaultValue = "10") int limit) {
 
         return PageResponse.from(queryOrderService.list(canalPedido, status, page, limit),
@@ -125,14 +135,18 @@ public class OrderController {
      * @return pedido completo
      */
     @GetMapping("/{id}")
-    @Operation(summary = "Consulta pedido com itens")
+    @Operation(summary = "Consulta pedido com itens",
+            description = "Retorna o pedido com itens e valores. CUSTOMER acessa apenas os proprios "
+                    + "pedidos; ADMIN e STAFF consultam qualquer pedido da rede.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Pedido encontrado"),
             @ApiResponse(responseCode = "401", description = "Nao autenticado"),
             @ApiResponse(responseCode = "403", description = "Pedido de outro cliente"),
             @ApiResponse(responseCode = "404", description = "Pedido inexistente")
     })
-    public OrderResponse findById(@PathVariable UUID id,
+    public OrderResponse findById(
+            @Parameter(description = "Identificador do pedido", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+            @PathVariable UUID id,
             @AuthenticationPrincipal AuthenticatedUser principal) {
         return OrderResponse.from(queryOrderService.findById(id, principal));
     }
@@ -146,7 +160,9 @@ public class OrderController {
      * @return pedido atualizado
      */
     @PatchMapping("/{id}/status")
-    @Operation(summary = "Aplica transicao de status validada pelo dominio")
+    @Operation(summary = "Aplica transicao de status validada pelo dominio",
+            description = "Aceita apenas transicoes previstas na maquina de estados (por exemplo "
+                    + "RECEIVED -> PREPARING -> READY -> DELIVERED) e exige motivo ao cancelar.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Status atualizado"),
             @ApiResponse(responseCode = "400", description = "Status nulo"),
@@ -155,7 +171,9 @@ public class OrderController {
             @ApiResponse(responseCode = "404", description = "Pedido inexistente"),
             @ApiResponse(responseCode = "409", description = "Transicao invalida")
     })
-    public OrderResponse changeStatus(@PathVariable UUID id,
+    public OrderResponse changeStatus(
+            @Parameter(description = "Identificador do pedido", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+            @PathVariable UUID id,
             @Valid @RequestBody ChangeOrderStatusRequest request,
             @AuthenticationPrincipal AuthenticatedUser principal) {
 

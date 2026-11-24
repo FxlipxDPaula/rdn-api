@@ -9,6 +9,8 @@ import com.rdn.rdn_api.domain.Order;
 import com.rdn.rdn_api.domain.OrderStatus;
 import com.rdn.rdn_api.domain.SalesChannel;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Pedido completo na resposta HTTP.
  *
@@ -24,9 +26,42 @@ import com.rdn.rdn_api.domain.SalesChannel;
  * @param motivoCancelamento  motivo registrado quando cancelado
  * @param criadoEm            instante de criacao
  */
-public record OrderResponse(UUID pedidoId, SalesChannel canalPedido, OrderStatus status, UUID unidadeId,
-        UUID clienteId, BigDecimal total, BigDecimal desconto, UUID promocaoId,
-        List<OrderItemResponse> itens, String motivoCancelamento, LocalDateTime criadoEm) {
+public record OrderResponse(
+        @Schema(description = "Identificador do pedido", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        UUID pedidoId,
+
+        @Schema(description = "Canal de origem do pedido", example = "TOTEM")
+        SalesChannel canalPedido,
+
+        @Schema(description = "Status atual do pedido", example = "AGUARDANDO_PAGAMENTO")
+        OrderStatus status,
+
+        @Schema(description = "Unidade que produz o pedido",
+                example = "00000000-0000-0000-0000-000000000001")
+        UUID unidadeId,
+
+        @Schema(description = "Cliente vinculado ao pedido, quando houver",
+                example = "00000000-0000-0000-0000-00000000000f")
+        UUID clienteId,
+
+        @Schema(description = "Total calculado pelo dominio", example = "46.62")
+        BigDecimal total,
+
+        @Schema(description = "Desconto acumulado de promocao e resgate", example = "5.18")
+        BigDecimal desconto,
+
+        @Schema(description = "Campanha aplicada ao pedido, quando houver",
+                example = "00000000-0000-0000-0000-0000000000c1")
+        UUID promocaoId,
+
+        @Schema(description = "Itens do pedido com preco praticado")
+        List<OrderItemResponse> itens,
+
+        @Schema(description = "Motivo registrado quando o pedido foi cancelado")
+        String motivoCancelamento,
+
+        @Schema(description = "Instante de criacao do pedido", example = "2026-11-16T12:00:00")
+        LocalDateTime criadoEm) {
 
     public static OrderResponse from(Order order) {
         UUID unidadeId = order.getBranch() == null ? null : order.getBranch().getId();

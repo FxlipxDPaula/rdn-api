@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import com.rdn.rdn_api.domain.OrderItem;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Item do pedido na resposta HTTP.
  *
@@ -15,8 +17,25 @@ import com.rdn.rdn_api.domain.OrderItem;
  * @param subtotal      preco unitario multiplicado pela quantidade
  * @param observacao    texto livre registrado no item
  */
-public record OrderItemResponse(UUID produtoId, String produtoNome, Integer quantidade,
-        BigDecimal precoUnitario, BigDecimal subtotal, String observacao) {
+public record OrderItemResponse(
+        @Schema(description = "Identificador do item de cardapio",
+                example = "00000000-0000-0000-0000-000000000003")
+        UUID produtoId,
+
+        @Schema(description = "Nome do produto no momento da resposta", example = "X-Burger Classico")
+        String produtoNome,
+
+        @Schema(description = "Quantidade pedida", example = "2")
+        Integer quantidade,
+
+        @Schema(description = "Preco unitario praticado no pedido", example = "25.90")
+        BigDecimal precoUnitario,
+
+        @Schema(description = "Preco unitario multiplicado pela quantidade", example = "51.80")
+        BigDecimal subtotal,
+
+        @Schema(description = "Texto livre registrado no item", example = "sem cebola")
+        String observacao) {
 
     public static OrderItemResponse from(OrderItem item) {
         UUID produtoId = item.getMenuItem() == null ? null : item.getMenuItem().getId();

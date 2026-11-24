@@ -45,6 +45,27 @@ class OpenApiDocsTest {
         assertThat(swagger.statusCode()).isEqualTo(200);
     }
 
+    @Test
+    void documentaContratoDeErroEParametrosDoFluxoCritico() throws Exception {
+        HttpResponse<String> apiDocs = get("/v3/api-docs");
+        assertThat(apiDocs.statusCode()).isEqualTo(200);
+
+        assertThat(apiDocs.body())
+                // schema unico de erro registrado em components
+                .contains("\"ApiError\"")
+                .contains("\"ApiErrorDetail\"")
+                .contains("Codigo estavel do erro")
+                // respostas nao-2xx referenciam o mesmo corpo de erro
+                .contains("#/components/schemas/ApiError")
+                // parametros do fluxo critico documentados
+                .contains("Idempotency-Key")
+                .contains("canalPedido")
+                .contains("Filtra pelo canal de origem do pedido")
+                // contratos de pedido e pagamento trazem exemplos
+                .contains("Canal de origem do pedido (multicanalidade)")
+                .contains("Chave de idempotencia da cobranca");
+    }
+
     private HttpResponse<String> get(String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder(
                 URI.create("http://localhost:" + environment.getProperty("local.server.port") + path))
