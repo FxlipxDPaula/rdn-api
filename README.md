@@ -153,9 +153,6 @@ projeto. Roteiro para quem for corrigir:
    `accessToken` retornado.
 4. Execute o fluxo da seção 9: pedido → pagamento mock → atualização de status.
 
-O campo `servers` da especificação é relativo (`/`), então o **Try it out** chama sempre a mesma origem
-que abriu o Swagger UI. Para fixar uma URL absoluta, defina `APP_PUBLIC_URL` (ver `.env.example`).
-
 #### Deploy público (opcional)
 
 O deploy **não faz parte dos entregáveis** do roteiro: pede-se API executável conforme este README,
