@@ -355,6 +355,10 @@ nos demais cenários, use `{{$guid}}`.
 | Execução sem JDK 25 | `docker compose --profile full up -d --build` (profile `full`, seção 5) |
 | Coleção Postman | `postman/rdn-api.postman_collection.json` |
 | Environment Postman | `postman/rdn-api.postman_environment.json` |
+| DER | [`documentacao/docs/DER.md`](documentacao/docs/DER.md) |
+| Diagramas | `documentacao/docs/diagrams/` (PNGs) e `documentacao/tools/render_diagrams.py` |
+| Relatórios por etapa | `documentacao/docs/etapa-1-*.pdf` a `documentacao/docs/etapa-5-*.pdf` |
+| Relatório final ABNT | `documentacao/docs/projeto-back-end-final-abnt.pdf` |
 
 ## 16. Estrutura do projeto
 
@@ -376,3 +380,16 @@ documentacao/plans/     planos das etapas
 documentacao/tools/     geradores de diagramas e PDF ABNT
 postman/          coleção e environment
 ```
+
+### 16.1 Como regenerar os artefatos
+
+Os dados da capa ABNT (`INSTITUTION`, `COURSE` e `RU`) estão em
+[`documentacao/tools/abnt_doc.py`](documentacao/tools/abnt_doc.py:54).
+
+```bash
+python documentacao/tools/render_diagrams.py      # PNGs em documentacao/docs/diagrams/
+python documentacao/tools/abnt_pdf_final.py       # documentacao/docs/projeto-back-end-final-abnt.pdf
+```
+
+No Windows, copie o PDF final para `<RU>_Projeto_Back_End.PDF` no momento da submissão. A cópia
+com RU é ignorada pelo Git e não deve ser versionada.
