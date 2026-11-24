@@ -196,8 +196,8 @@ vídeo ou validação pontual, não como link permanente no PDF.
 
    Esperado: `status=200`. URL que não responde `200` não entra no PDF.
 
-O relatório final já está versionado em `documentacao/docs/projeto-back-end-final-abnt.pdf` e cita as
-evidências locais; publicar a API não exige regerar nada.
+O relatório final é entregue como arquivo separado (`<RU>_Projeto_Back_End.PDF`, fora do repositório)
+e cita as evidências locais; publicar a API não exige regerar nada.
 
 O plano gratuito do Render hiberna após ~15 minutos sem tráfego; a primeira requisição após a
 pausa demora ~50 s (cold start). Avise o avaliador ou aqueça a URL antes da correção.
@@ -348,10 +348,7 @@ nos demais cenários, use `{{$guid}}`.
 | Execução sem JDK 25 | `docker compose --profile full up -d --build` (profile `full`, seção 5) |
 | Coleção Postman | `postman/rdn-api.postman_collection.json` |
 | Environment Postman | `postman/rdn-api.postman_environment.json` |
-| DER | [`documentacao/docs/DER.md`](documentacao/docs/DER.md) |
-| Diagramas | `documentacao/docs/diagrams/` (PNGs) |
-| Relatórios por etapa | `documentacao/docs/etapa-1-*.pdf` a `documentacao/docs/etapa-5-*.pdf` |
-| Relatório final ABNT | `documentacao/docs/projeto-back-end-final-abnt.pdf` |
+| Diagramas (DER, classes e sequência) | `documentacao/docs/diagrams/` (PNGs) |
 
 ## 16. Estrutura do projeto
 
@@ -367,9 +364,10 @@ src/main/resources/
   db/migration/   V1 a V5
   application.properties
 src/test/java/    testes unitários e de integração
-documentacao/docs/      DER, diagramas e relatorios ABNT
+documentacao/docs/diagrams/  diagramas do relatorio (PNGs)
 postman/          coleção e environment
 ```
 
-Os geradores dos diagramas e do relatório são ferramentas locais de apoio e não fazem parte do
-repositório. O PDF versionado em `documentacao/docs/` é o artefato de referência da entrega.
+Os geradores dos diagramas e do relatório, o DER em Markdown e os PDFs de relatório são artefatos
+locais de apoio e não fazem parte do repositório. Do material acadêmico, o repositório guarda apenas
+os PNGs em `documentacao/docs/diagrams/`; o PDF final é entregue separadamente.

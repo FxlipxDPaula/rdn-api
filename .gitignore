@@ -49,3 +49,7 @@ documentacao/docs/Roteiro Atividade Pratica.pdf
 documentacao/tools/
 documentacao/plans/
 plans/
+
+# Relatorios e DER locais (a evidencia de submissao fica fora do repositorio)
+documentacao/docs/*.md
+documentacao/docs/*.pdf
