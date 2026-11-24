@@ -16,5 +16,23 @@ services:
       timeout: 5s
       retries: 5
 
+  # Servico opcional da API (imagem multi-stage). Fica atras do profile "full" para nao
+  # conflitar com quem roda a aplicacao pelo wrapper:
+  #   docker compose up -d                     -> so o PostgreSQL
+  #   docker compose --profile full up -d --build  -> PostgreSQL + API em http://localhost:8080
+  api:
+    profiles: ["full"]
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/rdn
+      DB_USER: rdn
+      DB_PASSWORD: rdn
+      JWT_SECRET: rdn-api-dev-secret-key-change-me-32b
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   rdn-pgdata:
