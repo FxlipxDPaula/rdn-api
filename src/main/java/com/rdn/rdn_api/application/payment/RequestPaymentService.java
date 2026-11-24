@@ -21,7 +21,6 @@ import com.rdn.rdn_api.application.payment.exception.OrderNotAwaitingPaymentExce
 import com.rdn.rdn_api.domain.Order;
 import com.rdn.rdn_api.domain.OrderStatus;
 import com.rdn.rdn_api.domain.Payment;
-import com.rdn.rdn_api.domain.PaymentStatus;
 import com.rdn.rdn_api.domain.UserRole;
 
 /**
