@@ -1,0 +1,27 @@
+# Blueprint do Render para publicar a API (e o Swagger) com URL publica.
+#
+# O plano gratuito do Render nao oferece PostgreSQL gerenciado permanente, entao o
+# banco fica em um provedor externo (Neon, Supabase, Aiven). As variaveis marcadas
+# com sync:false sao pedidas no dashboard no primeiro deploy.
+services:
+  - type: web
+    name: rdn-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /v3/api-docs
+    autoDeploy: true
+    envVars:
+      - key: JAVA_TOOL_OPTIONS
+        value: -XX:MaxRAMPercentage=70
+      # Segredo JWT gerado pelo Render; atende o minimo de 32 bytes exigido pelo SecurityConfig.
+      - key: JWT_SECRET
+        generateValue: true
+      # Exemplo (Neon): jdbc:postgresql://ep-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false

@@ -1,0 +1,18 @@
+target/
+.git/
+.gitignore
+.gitattributes
+.idea/
+.vscode/
+*.iml
+
+# Material academico e de apoio nao entra na imagem.
+documentacao/
+postman/
+README.md
+*.pdf
+
+# Segredos nunca vao para a imagem (o .env.example documenta as variaveis).
+.env
+.env.*
+!.env.example
