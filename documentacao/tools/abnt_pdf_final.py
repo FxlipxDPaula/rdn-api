@@ -16,9 +16,10 @@ from abnt_doc import AbntReport  # noqa: E402
 
 OUTPUT = "documentacao/docs/projeto-back-end-final-abnt.pdf"
 REPO_URL = "https://github.com/FxlipxDPaula/rdn-api"
-# URL publica do deploy. Defina RDN_PUBLIC_URL antes de gerar o PDF final:
+# Modo padrao da entrega: sem deploy. O relatorio aponta para o repositorio publico, para a rota
+# local do Swagger e para a colecao versionada (secao 7.1 do README).
+# Opcional: se a API for publicada, defina RDN_PUBLIC_URL antes de gerar:
 #   set "RDN_PUBLIC_URL=https://<servico>.onrender.com"   (Windows)
-# Vazia, o relatorio cai no modo local e aponta para localhost.
 PUBLIC_URL = os.environ.get("RDN_PUBLIC_URL", "").rstrip("/")
 FIG_DIR = os.path.join("documentacao", "docs", "diagrams")
 
@@ -90,7 +91,7 @@ def build():
             ["Concorrencia", "Lock pessimista no estoque e na conta de fidelidade"],
             ["Desempenho em pico", "Paginacao nas listagens, indices por canal e status e pool Hikari"],
             ["Disponibilidade", "API stateless com JWT, health check em /v3/api-docs e reinicio pelo provedor"],
-            ["Documentacao", "OpenAPI, Swagger publico, README e colecao Postman"],
+            ["Documentacao", "OpenAPI, Swagger local exposto pela aplicacao, README e colecao Postman"],
             ["Testabilidade", "Suite automatizada com testes unitarios e integracao HTTP"],
         ],
         widths=[0.30, 0.70],
@@ -373,8 +374,8 @@ def build():
             ["Swagger UI (publico)", PUBLIC_URL + "/swagger-ui.html"],
             ["OpenAPI JSON (publico)", PUBLIC_URL + "/v3/api-docs"],
         ] if PUBLIC_URL else [
-            ["Swagger UI", "http://localhost:8080/swagger-ui.html apos executar o README"],
-            ["OpenAPI JSON", "http://localhost:8080/v3/api-docs apos executar o README"],
+            ["Swagger UI", "http://localhost:8080/swagger-ui.html (rota /swagger-ui.html, apos as secoes 5 e 6 do README)"],
+            ["OpenAPI JSON", "http://localhost:8080/v3/api-docs (rota /v3/api-docs, mesma origem do Swagger UI)"],
         ]) + [
             ["Colecao Postman", REPO_URL + "/blob/main/postman/rdn-api.postman_collection.json"],
             ["Environment Postman", REPO_URL + "/blob/main/postman/rdn-api.postman_environment.json"],
@@ -382,22 +383,24 @@ def build():
             ["Diagramas", "documentacao/docs/diagrams/*.png e documentacao/tools/render_diagrams.py"],
             ["Relatorios por etapa", "documentacao/docs/etapa-1 a etapa-5"],
             ["Relatorio final", "documentacao/docs/projeto-back-end-final-abnt.pdf"],
-            ["Imagem Docker", "Dockerfile multi-stage e render.yaml (deploy com PostgreSQL externo)"],
+            ["Artefatos de container", "Dockerfile multi-stage, render.yaml e profile full do compose (opcionais, fora da entrega)"],
         ],
         widths=[0.34, 0.66],
     )
     report.p(
-        "A imagem e construida pelo Dockerfile multi-stage e publicada no Render a partir do render.yaml, "
-        "com PostgreSQL gerenciado externo. O Flyway aplica V1 a V5 no primeiro boot e o SchemaDdlTest "
-        "cobre as mesmas migrations em banco limpo. A reproducao local continua documentada no README, "
-        "que traz o passo a passo de banco, migrations, execucao, Swagger e testes.",
+        "A entrega nao depende de deploy: o roteiro pede API executavel localmente, repositorio publico, "
+        "colecao versionada e rota de Swagger documentada, e essas quatro evidencias estao na tabela "
+        "acima. O Dockerfile multi-stage e o render.yaml ficam no repositorio como opcao para quem quiser "
+        "uma URL permanente. O Flyway aplica V1 a V5 no primeiro boot e o SchemaDdlTest cobre as mesmas "
+        "migrations em banco limpo. O README traz o passo a passo de banco, migrations, execucao, Swagger "
+        "e testes.",
     )
 
     report.h1("PLANO DE TESTES")
     report.p(
-        "A suite automatizada cobre dominio, casos de uso e HTTP real com JWT. A colecao Postman possui "
-        "25 cenarios (T01 a T25), dos quais 13 sao positivos e 12 sao negativos. Os helpers T02b, T11a, "
-        "T18a e T21a preparam estado e nao entram na contagem.",
+        "A suite automatizada cobre dominio, casos de uso e HTTP real com JWT. A colecao Postman tem 29 "
+        "requisicoes: 25 cenarios (T01 a T25), dos quais 13 sao positivos e 12 sao negativos, mais os "
+        "helpers T02b, T11a, T18a e T21a, que preparam estado e nao entram na contagem.",
     )
     report.table(
         "Cenarios positivos da colecao Postman",

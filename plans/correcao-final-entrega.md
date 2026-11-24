@@ -3,6 +3,15 @@
 Objetivo: fechar os pontos que ainda impedem a nota máxima e deixar o PDF pronto para upload,
 sem depender de decisões pendentes no momento do envio.
 
+## 0. Decisão final (24/11/2026) — entrega sem deploy
+
+A entrega **não depende de publicar a API**. O roteiro (7.1 e 7.3) pede API executável localmente,
+repositório público, coleção Postman versionada e rota de Swagger documentada; o aviso de nota zero
+protege esses links, não exige host público. Adotada essa leitura: toda menção a
+`rdn-api.onrender.com` saiu do README e do PDF, porque link declarado e morto é pior que ausência de
+link. As Fases 1 e 2 permanecem abaixo apenas como procedimento opcional, para quem quiser uma URL
+permanente.
+
 ## 1. Diagnóstico verificado (estado atual)
 
 > Verificado em 23/11/2026, com `main` sincronizada em `origin/main`.
@@ -12,31 +21,30 @@ sem depender de decisões pendentes no momento do envio.
 | Código e testes | 98 testes, 0 falhas | `.\mvnw.cmd -B -ntp test` → BUILD SUCCESS |
 | Wrapper Maven | funciona em clone limpo (baixa Maven 3.10.0, sem jar versionado) | [`.mvn/wrapper/maven-wrapper.properties`](../../.mvn/wrapper/maven-wrapper.properties:2) |
 | Swagger na aplicação | público, sem token | [`SecurityConfig.java`](../../src/main/java/com/rdn/rdn_api/infrastructure/security/SecurityConfig.java:59) |
-| Deploy | artefatos **commitados** (`299e3a9`); serviço no Render ainda responde `404` (`x-render-routing: no-server`) | [`Dockerfile`](../../Dockerfile:1), [`render.yaml`](../../render.yaml:8) |
+| Deploy | **descartado** em 24/11/2026; artefatos seguem versionados como opção (o serviço nunca respondeu `200`) | [`Dockerfile`](../../Dockerfile:1), [`render.yaml`](../../render.yaml:8) |
 | Config de host | porta via `PORT`, proxy headers, OpenAPI relativo | [`application.properties`](../../src/main/resources/application.properties:5) |
-| README | seção 7.1 com o host do blueprint (`rdn-api.onrender.com`); falta validar o `200` | [`README.md`](../../README.md:171) |
-| PDF | 18 páginas, conteúdo completo, **ainda em modo local** (regenerar após o deploy) | [`abnt_pdf_final.py`](../../documentacao/tools/abnt_pdf_final.py:22) |
+| README | seção 7.1 reescrita como "Swagger como evidência (execução local)"; URLs públicas mortas removidas | [`README.md`](../../README.md:140) |
+| PDF | 18 páginas em modo local, com evidências de repositório e de rota local | [`abnt_pdf_final.py`](../../documentacao/tools/abnt_pdf_final.py:375) |
 | Repositório remoto | `main` e `origin/main` no mesmo commit (build, OpenAPI, deploy, config e docs) | [`.git/config`](../../.git/config:12) |
 
 ## 2. Decisões de entrega
 
 | Decisão | Escolha | Motivo |
 |---|---|---|
-| Hospedagem da API | Render, runtime Docker, plano free | `render.yaml` já pronto; build remoto não depende da máquina do autor |
-| Banco | PostgreSQL gerenciado externo (Neon) | plano free do Render não mantém Postgres permanente |
-| Fonte da URL no PDF | variável de ambiente `RDN_PUBLIC_URL` no gerador | permite gerar o PDF antes e depois do deploy sem editar texto |
+| Hospedagem da API | **nenhuma** (execução local é a evidência) | o roteiro pede API local + rota documentada; evita link morto no PDF |
+| Banco | PostgreSQL local via `docker compose up -d` | já documentado no README e coberto pelo `SchemaDdlTest` |
+| Fonte da URL no PDF | fallback local do gerador, sem `RDN_PUBLIC_URL` | evidência = repositório público + rotas `/swagger-ui.html` e `/v3/api-docs` |
 | PDF | sempre regenerado por script, nunca editado à mão | evita divergência entre texto e formatação |
 | Submissão | `4885643_Projeto_Back_End.PDF` na raiz (ignorado pelo Git) | padrão de nome do roteiro |
 
 ```mermaid
 flowchart TD
-    A[Commit e push] --> B[Postgres no Neon]
-    B --> C[Blueprint no Render]
-    C --> D[Validar Swagger publico]
-    D --> E[Exportar RDN_PUBLIC_URL]
-    E --> F[Regenerar PDF]
-    F --> G[Copiar para RU_Projeto_Back_End.PDF]
-    G --> H[Subir no AVA]
+    A[Ajustar README e plano] --> B[Regenerar PDF em modo local]
+    B --> C[Conferir sumario e tabela de evidencias]
+    C --> D[Copiar para RU_Projeto_Back_End.PDF]
+    D --> E[Commit e push]
+    E --> F[Validar repo, README e colecao em janela anonima]
+    F --> G[Subir no AVA]
 ```
 
 ## 3. Fase 0 — Congelar o estado e commitar
@@ -108,17 +116,17 @@ com os IDs semeados (`...0001` unidade, `...0003` produto, `...00c1` promoção)
 
 ### 6.1 README
 
-- Linha da evidência "Swagger público": placeholder substituído pelo host do blueprint em
-  [`README.md`](../../README.md:336); ainda é preciso confirmar o `200` após o deploy.
+- Evidências: a tabela de [`README.md`](../../README.md:140) passou a citar a rota local
+  (`/swagger-ui.html` e `/v3/api-docs`) e a remover qualquer host público não validado.
 - Seção 6: acrescentar nota de que em Linux/macOS o wrapper pode exigir `chmod +x mvnw`.
-- Seção 12: registrar que, para rodar a coleção contra o deploy, o `baseUrl` do environment deve ser trocado.
+- Seção 12: registrar que, para rodar a coleção contra um deploy, o `baseUrl` do environment deve ser trocado.
 
-### 6.2 Environment Postman público (feito)
+### 6.2 Environment Postman público (opcional)
 
 [`rdn-api.postman_environment.public.json`](../../postman/rdn-api.postman_environment.public.json:4)
-criado com `baseUrl = https://rdn-api.onrender.com` (host do blueprint) e os mesmos IDs de seed.
-A coleção tem 29 requisições (T01–T25 do roteiro mais variantes), então o avaliador roda direto no
-deploy. Falta apenas confirmar a URL depois que o serviço existir.
+existe como extra: traz os mesmos IDs de seed e um `baseUrl` de exemplo (`https://SEU-SERVICO.onrender.com`).
+O caminho validado da entrega é o environment local, com `baseUrl = http://localhost:8080`. A coleção
+tem 29 requisições (T01–T25 do roteiro mais as chamadas de apoio `T02b`, `T11a`, `T18a` e `T21a`).
 
 ### 6.3 Serviço `api` no Docker Compose (feito)
 
@@ -142,11 +150,12 @@ conflitar com quem roda a aplicação pelo wrapper:
 ```
 
 Quem só tem Docker roda `docker compose --profile full up -d --build` e obtém banco + API + Swagger.
+O build da imagem não foi exercitado no ambiente do autor; o caminho validado continua sendo o wrapper.
 
 ## 7. Fase 4 — Correções no gerador do PDF
 
 > **Aplicado.** Os itens 7.1 a 7.6 já estão no script e o PDF de `documentacao/docs/` foi regenerado
-> (18 páginas). Falta apenas regerar com `RDN_PUBLIC_URL` depois que o deploy responder `200`.
+> (18 páginas) em modo local, que é o padrão da entrega. `RDN_PUBLIC_URL` ficou como opção.
 
 Arquivo único: [`abnt_pdf_final.py`](../../documentacao/tools/abnt_pdf_final.py).
 
@@ -254,41 +263,43 @@ com `re.sub` por palavra inteira, aplicada **somente** em `p()`, `h1()`, `h2()` 
 ## 8. Fase 5 — Gerar, validar e renomear o PDF
 
 ```bat
-set "RDN_PUBLIC_URL=https://<URL>"
 python documentacao/tools/abnt_pdf_final.py
-copy /Y documentacao\docs\projeto-back-end-final-abnt.pdf 4885643_Projeto_Back_End.PDF
+copy /Y documentacao\docs\projeto-back-end-final-abnt.pdf <RU>_Projeto_Back_End.PDF
 ```
+
+Sem `RDN_PUBLIC_URL` o gerador usa o modo local: as evidências apontam para o repositório público,
+para as rotas `/swagger-ui.html` e `/v3/api-docs` e para a coleção versionada.
 
 Checklist de validação no PDF gerado:
 
 - [ ] Sumário legível e com numeração de páginas correta.
-- [ ] Tabela 6 com as linhas "Swagger UI (publico)" e "OpenAPI JSON (publico)"; nenhuma ocorrência de `localhost` como evidência principal.
+- [ ] Tabela de evidências com as linhas "Swagger UI" e "OpenAPI JSON" citando a rota local e o repositório.
 - [ ] Links da coleção Postman apontando para `github.com/.../blob/main/postman/...`.
 - [ ] Tabela 2 com 10 linhas (incluindo desempenho e disponibilidade).
 - [ ] Seção 3.1 com "Pos-condicoes".
 - [ ] Seção 6 com o parágrafo das quatro camadas.
 - [ ] Declaração de IA sem número, antes das referências.
 - [ ] Nenhum placeholder (`<servico>`, `<URL>`) restante.
-- [ ] Arquivo final `4885643_Projeto_Back_End.PDF` aberto e conferido.
+- [ ] Arquivo final `<RU>_Projeto_Back_End.PDF` aberto e conferido.
 
 ## 9. Fase 6 — Publicar
 
 1. `git push` de tudo (inclui o commit do gerador com as correções).
-2. Aquecer a URL do Render (primeiro acesso após hibernação leva ~50 s).
-3. Abrir a URL em janela anônima: repositório, Swagger e raw da coleção Postman.
-4. Subir `4885643_Projeto_Back_End.PDF` no AVA.
-5. Manter a URL viva até a correção (ping periódico, se possível).
+2. Abrir em janela anônima: repositório, README renderizado e raw da coleção Postman.
+3. Conferir que nenhum documento cita host público.
+4. Subir `<RU>_Projeto_Back_End.PDF` no AVA.
 
 ## 10. Critérios de aceite (Definition of Done)
 
-- Repositório público com os 6 commits desta fase e README refletindo a URL real.
-- `https://<URL>/swagger-ui.html` abre em navegador anônimo, sem token.
-- Fluxo A executável pelo Swagger público com usuário semeado.
-- Coleção Postman importável, com `baseUrl` funcional (local ou público).
-- PDF final: 18+ páginas, sem `localhost` como evidência principal, com todas as seções do roteiro.
-- Arquivo nomeado `4885643_Projeto_Back_End.PDF` e enviado no AVA.
+- Repositório público com os commits desta fase e README sem nenhuma URL que não responda.
+- Swagger documentado por rota (`/swagger-ui.html` e `/v3/api-docs`) e executável conforme a seção 6.
+- Fluxo A executável pelo Swagger local com o usuário semeado `customer@rdn.local`.
+- Coleção Postman importável, com `baseUrl = http://localhost:8080` no environment local.
+- PDF final: 18+ páginas, evidências apontando para o repositório e para a rota local, com todas as
+  seções do roteiro e sem placeholders.
+- Arquivo nomeado `<RU>_Projeto_Back_End.PDF` e enviado no AVA.
 
-## 11. Riscos e plano B
+## 11. Riscos e plano B (somente se optar por publicar)
 
 | Risco | Impacto | Mitigação |
 |---|---|---|
@@ -297,7 +308,7 @@ Checklist de validação no PDF gerado:
 | Neon suspende por inatividade | primeira conexão lenta | primeira requisição após acordar a URL |
 | Render indisponível no dia | sem link público | alternativa Railway/Koyeb/Fly com o mesmo `Dockerfile`; ou VPS com compose |
 | JDK 25 ausente na máquina do avaliador | não consegue rodar local | URL pública elimina a necessidade; `mvnw test` também exige JDK 25 |
-| PDF gerado sem a URL | volta ao problema original | gerar somente depois de `RDN_PUBLIC_URL` apontar para uma URL que responde 200 |
+| PDF citando URL que caiu | link morto no documento | gerar em modo local (padrão) e citar a URL só com `200` confirmado |
 
 ## 12. Organização final do material
 
