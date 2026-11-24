@@ -5,7 +5,7 @@ sem depender de decisões pendentes no momento do envio.
 
 ## 1. Diagnóstico verificado (estado atual)
 
-> Verificado em 23/11/2026, após o push de `4ebbbc1`.
+> Verificado em 23/11/2026, com `main` sincronizada em `origin/main`.
 
 | Item | Situação | Evidência |
 |---|---|---|
@@ -16,7 +16,7 @@ sem depender de decisões pendentes no momento do envio.
 | Config de host | porta via `PORT`, proxy headers, OpenAPI relativo | [`application.properties`](../../src/main/resources/application.properties:5) |
 | README | seção 7.1 com o host do blueprint (`rdn-api.onrender.com`); falta validar o `200` | [`README.md`](../../README.md:171) |
 | PDF | 18 páginas, conteúdo completo, **ainda em modo local** (regenerar após o deploy) | [`abnt_pdf_final.py`](../../documentacao/tools/abnt_pdf_final.py:22) |
-| Repositório remoto | sincronizado em `4ebbbc1` (build, OpenAPI, deploy, config e docs) | [`.git/config`](../../.git/config:12) |
+| Repositório remoto | `main` e `origin/main` no mesmo commit (build, OpenAPI, deploy, config e docs) | [`.git/config`](../../.git/config:12) |
 
 ## 2. Decisões de entrega
 
@@ -109,7 +109,7 @@ com os IDs semeados (`...0001` unidade, `...0003` produto, `...00c1` promoção)
 ### 6.1 README
 
 - Linha da evidência "Swagger público": placeholder substituído pelo host do blueprint em
-  [`README.md`](../../README.md:325); ainda é preciso confirmar o `200` após o deploy.
+  [`README.md`](../../README.md:336); ainda é preciso confirmar o `200` após o deploy.
 - Seção 6: acrescentar nota de que em Linux/macOS o wrapper pode exigir `chmod +x mvnw`.
 - Seção 12: registrar que, para rodar a coleção contra o deploy, o `baseUrl` do environment deve ser trocado.
 
