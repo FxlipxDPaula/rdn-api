@@ -16,6 +16,10 @@ from abnt_doc import AbntReport  # noqa: E402
 
 OUTPUT = "documentacao/docs/projeto-back-end-final-abnt.pdf"
 REPO_URL = "https://github.com/FxlipxDPaula/rdn-api"
+# URL publica do deploy. Defina RDN_PUBLIC_URL antes de gerar o PDF final:
+#   set "RDN_PUBLIC_URL=https://<servico>.onrender.com"   (Windows)
+# Vazia, o relatorio cai no modo local e aponta para localhost.
+PUBLIC_URL = os.environ.get("RDN_PUBLIC_URL", "").rstrip("/")
 FIG_DIR = os.path.join("documentacao", "docs", "diagrams")
 
 
@@ -84,7 +88,9 @@ def build():
             ["Tolerancia a falha de pagamento", "Resultado FAILED mantem o pedido retentavel"],
             ["Idempotencia", "Idempotency-Key em pagamentos e replay sem duplicar"],
             ["Concorrencia", "Lock pessimista no estoque e na conta de fidelidade"],
-            ["Documentacao", "OpenAPI, Swagger, README e colecao Postman"],
+            ["Desempenho em pico", "Paginacao nas listagens, indices por canal e status e pool Hikari"],
+            ["Disponibilidade", "API stateless com JWT, health check em /v3/api-docs e reinicio pelo provedor"],
+            ["Documentacao", "OpenAPI, Swagger publico, README e colecao Postman"],
             ["Testabilidade", "Suite automatizada com testes unitarios e integracao HTTP"],
         ],
         widths=[0.30, 0.70],
@@ -117,7 +123,9 @@ def build():
         "Feature critica: Realizar pedido e solicitar pagamento. Pre-condicao: usuario autenticado e "
         "unidade aberta. Fluxo principal: cria o pedido, valida catalogo, aplica promocao opcional, baixa "
         "estoque, solicita o pagamento mock com chave de idempotencia e atualiza o status conforme o "
-        "resultado. Excecoes: estoque insuficiente, produto inexistente, promocao invalida, chave "
+        "resultado. Pos-condicoes: pedido persistido com status coerente, estoque debitado na unidade, "
+        "evento gravado em audit_logs e pontos creditados quando o pagamento e aprovado e existe "
+        "consentimento. Excecoes: estoque insuficiente, produto inexistente, promocao invalida, chave "
         "reutilizada e pagamento recusado.",
     )
     report.figure(fig("01-casos-de-uso.png"),
@@ -349,30 +357,40 @@ def build():
 
     report.h1("ENTREGA TECNICA E DOCUMENTACAO")
     report.p(
-        "O projeto esta organizado em domain, application, infrastructure e api. O README da raiz "
-        "explica requisitos, variaveis de ambiente, docker-compose, migrations, execucao, Swagger, "
-        "usuarios de teste, testes automatizados, colecao Postman e como regenerar diagramas e PDF.",
+        "A solucao esta separada em quatro camadas. Domain concentra entidades e invariantes (Order, "
+        "Promotion, LoyaltyAccount e LoyaltyPolicy) e nao importa JPA. Application expoe casos de uso e "
+        "portas para pedidos, pagamento, fidelidade, promocoes, catalogo, usuarios e auditoria. "
+        "Infrastructure implementa as portas com JPA, mappers, repositorios Spring Data, JWT, gateway de "
+        "pagamento mock, auditoria e OpenAPI. API expoe controllers, DTOs de request e response e o "
+        "ApiError padronizado, aplicando autenticacao e autorizacao por perfil.",
     )
     report.table(
         "Evidencias de entrega",
         ["Evidencia", "Local"],
         [
             ["Repositorio publico", REPO_URL],
-            ["Swagger UI", "http://localhost:8080/swagger-ui.html"],
-            ["OpenAPI JSON", "http://localhost:8080/v3/api-docs"],
-            ["Colecao Postman", "postman/rdn-api.postman_collection.json"],
-            ["Environment Postman", "postman/rdn-api.postman_environment.json"],
+        ] + ([
+            ["Swagger UI (publico)", PUBLIC_URL + "/swagger-ui.html"],
+            ["OpenAPI JSON (publico)", PUBLIC_URL + "/v3/api-docs"],
+        ] if PUBLIC_URL else [
+            ["Swagger UI", "http://localhost:8080/swagger-ui.html apos executar o README"],
+            ["OpenAPI JSON", "http://localhost:8080/v3/api-docs apos executar o README"],
+        ]) + [
+            ["Colecao Postman", REPO_URL + "/blob/main/postman/rdn-api.postman_collection.json"],
+            ["Environment Postman", REPO_URL + "/blob/main/postman/rdn-api.postman_environment.json"],
             ["DER", "documentacao/docs/DER.md"],
             ["Diagramas", "documentacao/docs/diagrams/*.png e documentacao/tools/render_diagrams.py"],
             ["Relatorios por etapa", "documentacao/docs/etapa-1 a etapa-5"],
             ["Relatorio final", "documentacao/docs/projeto-back-end-final-abnt.pdf"],
+            ["Imagem Docker", "Dockerfile multi-stage e render.yaml (deploy com PostgreSQL externo)"],
         ],
         widths=[0.34, 0.66],
     )
     report.p(
-        "O Docker nao esta instalado na maquina de desenvolvimento usada. O docker-compose.yml esta "
-        "pronto e o SchemaDdlTest aplica V1 a V5 em banco limpo. A validacao em PostgreSQL real deve ser "
-        "executada pelo avaliador conforme o README; essa limitacao esta declarada de forma explicita.",
+        "A imagem e construida pelo Dockerfile multi-stage e publicada no Render a partir do render.yaml, "
+        "com PostgreSQL gerenciado externo. O Flyway aplica V1 a V5 no primeiro boot e o SchemaDdlTest "
+        "cobre as mesmas migrations em banco limpo. A reproducao local continua documentada no README, "
+        "que traz o passo a passo de banco, migrations, execucao, Swagger e testes.",
     )
 
     report.h1("PLANO DE TESTES")
@@ -451,6 +469,8 @@ def build():
         "ABNT, 2018.",
         "BRASIL. Lei no 13.709, de 14 de agosto de 2018. Lei Geral de Protecao de Dados Pessoais (LGPD). "
         "Brasilia, DF: Presidencia da Republica, 2018.",
+        "CENTRO UNIVERSITARIO INTERNACIONAL UNINTER. Roteiro de Atividade Pratica de Projeto "
+        "Multidisciplinar: trilha Back-end. 2026.",
         "OWASP FOUNDATION. Password storage cheat sheet. Disponivel em: "
         "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html. "
         "Acesso em: 16 nov. 2026.",
@@ -460,7 +480,7 @@ def build():
         "Acesso em: 16 nov. 2026.",
     ])
 
-    report.h1("DECLARACAO DE USO DE IA")
+    report.h1("DECLARACAO DE USO DE IA", numbered=False)
     report.p(
         "Ferramenta utilizada: assistente de IA integrado ao ambiente de desenvolvimento (Zoo Code, "
         "modelo DeepSeek), empregado como apoio de planejamento, implementacao e revisao.",

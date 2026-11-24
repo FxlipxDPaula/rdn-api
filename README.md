@@ -76,6 +76,17 @@ docker compose up -d
 docker compose ps
 ```
 
+O `docker-compose.yml` sobe apenas o PostgreSQL por padrão. Para subir também a API na imagem Docker
+(útil para quem não tem JDK 25 instalado), use o profile `full`:
+
+```bash
+docker compose --profile full up -d --build
+```
+
+Nesse modo o Swagger fica em `http://localhost:8080/swagger-ui.html`, as migrations `V1`–`V5` rodam
+no primeiro boot e o banco é o mesmo serviço `postgres` do compose. Sem o profile, use
+`.\mvnw.cmd spring-boot:run` na seção 6.
+
 Migrations aplicadas:
 
 | Versão | Conteúdo |
@@ -107,6 +118,9 @@ Unix:
 ./mvnw spring-boot:run
 ```
 
+> Em clones feitos no Linux/macOS o bit de execução do wrapper pode vir desligado. Se aparecer
+> `Permission denied`, rode `chmod +x mvnw` (ou invoque com `sh mvnw spring-boot:run`).
+
 A API sobe em `http://localhost:8080`. O log deve mostrar as migrations do Flyway e
 `Started RdnApiApplication`.
 
@@ -118,6 +132,65 @@ A API sobe em `http://localhost:8080`. O log deve mostrar as migrations do Flywa
 O login é público. Para os demais endpoints, use o botão **Authorize** com o token retornado por
 `POST /auth/login` (esquema `bearerAuth`). Os caminhos de documentação são liberados no
 `SecurityConfig`; o restante continua autenticado.
+
+O campo `servers` da especificação é relativo (`/`), então o **Try it out** chama sempre a mesma
+origem que abriu o Swagger UI: `localhost` em desenvolvimento e a URL pública em deploy. Para fixar
+uma URL absoluta, defina `APP_PUBLIC_URL` (ver `.env.example`).
+
+### 7.1 Deixar o Swagger acessível para o avaliador
+
+`localhost` só existe na máquina do autor, então é preciso publicar a API. Três caminhos, em ordem
+crescente de esforço:
+
+**A. Túnel instantâneo (5 minutos, URL temporária).** Requer a API rodando localmente com um
+PostgreSQL acessível (Docker, seção 5).
+
+```bat
+:: opção 1 — Cloudflare Tunnel, sem conta e sem instalar nada além do binário
+cloudflared tunnel --url http://localhost:8080
+
+:: opção 2 — ngrok, exige conta gratuita e authtoken
+ngrok http 8080
+```
+
+O terminal imprime uma URL `https://algo.trycloudflare.com` ou `https://algo.ngrok-free.app`.
+Acesse `<URL>/swagger-ui.html`. A URL morre quando o processo termina — serve para gravação de
+vídeo ou validação pontual, não como link permanente no PDF.
+
+**B. Deploy no Render via Docker (URL permanente, recomendado).** O repositório já traz
+[`Dockerfile`](Dockerfile:1) (multi-stage, usuário sem privilégios) e [`render.yaml`](render.yaml:1)
+(blueprint do Web Service).
+
+1. Crie um PostgreSQL gratuito no Neon ou Supabase e copie a URL JDBC
+   (`jdbc:postgresql://host/db?sslmode=require`), o usuário e a senha.
+2. No Render: **New → Blueprint**, aponte para o repositório e aplique o `render.yaml`.
+3. Preencha no dashboard as variáveis pedidas: `DB_URL`, `DB_USER`, `DB_PASSWORD`. O
+   `JWT_SECRET` é gerado pelo Render; a porta vem de `PORT` (já lida por
+   [`application.properties`](src/main/resources/application.properties:5)).
+4. O Flyway aplica `V1`–`V5` no primeiro boot. Acompanhe o log até `Started RdnApiApplication`.
+5. Swagger público: `https://<servico>.onrender.com/swagger-ui.html` e
+   `https://<servico>.onrender.com/v3/api-docs`. O `healthCheckPath` do blueprint usa
+   `/v3/api-docs`, que é público no `SecurityConfig`.
+6. Com a URL respondendo `200`, gere o PDF já com a URL embutida na tabela de evidências:
+
+   ```bat
+   set "RDN_PUBLIC_URL=https://<servico>.onrender.com"
+   python documentacao/tools/abnt_pdf_final.py
+   ```
+
+   Sem essa variável, o relatório cai no modo local e volta a apontar para `localhost`.
+
+O plano gratuito do Render hiberna após ~15 minutos sem tráfego; a primeira requisição após a
+pausa demora ~50 s (cold start). Avise o avaliador ou aqueça a URL antes da correção.
+
+**C. Deploy completo com Docker Compose (VPS própria).** O [`docker-compose.yml`](docker-compose.yml:1)
+mantém só o PostgreSQL; adicione um serviço da API construído a partir do `Dockerfile` e exponha a
+porta atrás de um proxy reverso (Caddy/Nginx com TLS). É o caminho com mais controle e o único que
+não depende de provedor terceirizado.
+
+> Em qualquer caminho, os usuários de seed (`ADMIN`, `STAFF`, `KITCHEN`, `CUSTOMER`, seção 8)
+> passam a existir em um banco público. Use `JWT_SECRET` forte e, se o prazo permitir, uma `V6` de
+> seed só para o ambiente publicado.
 
 ## 8. Usuários de teste
 
@@ -196,7 +269,11 @@ JWT, incluindo:
 Arquivos:
 
 - `postman/rdn-api.postman_collection.json`
-- `postman/rdn-api.postman_environment.json`
+- `postman/rdn-api.postman_environment.json` (ambiente local, `baseUrl = http://localhost:8080`)
+- `postman/rdn-api.postman_environment.public.json` (ambiente do deploy; ajuste o `baseUrl` para a URL pública)
+
+Para rodar os cenários contra a API publicada, selecione o environment público e confirme o `baseUrl`.
+Nada mais muda: os scripts preenchem `token` e IDs automaticamente.
 
 Importe os dois no Postman, selecione o environment e execute na ordem:
 
@@ -233,9 +310,11 @@ e `novoUsuarioEmail` automaticamente. Para o replay, a chave é fixa; nos demais
 - O resgate de pontos é aplicado como desconto em pedido `AGUARDANDO_PAGAMENTO`; não há conversão
   em dinheiro nem transferência de pontos.
 - Não há listagem, edição ou desativação de usuários; o escopo entregue é apenas o cadastro por `ADMIN`.
-- Docker não está instalado na máquina de desenvolvimento usada neste trabalho. O
-  `docker-compose.yml` está pronto e o `SchemaDdlTest` cobre `V1`–`V5`; a validação em PostgreSQL
-  real deve ser executada pelo avaliador conforme a seção 5.
+- O CLI do Docker existe na máquina de desenvolvimento usada neste trabalho, mas o daemon
+  (Docker Desktop) não estava em execução, então o `Dockerfile` não pôde ser construído localmente.
+  O `docker-compose.yml` está pronto, o `SchemaDdlTest` cobre `V1`–`V5` e o Render constrói a
+  imagem a partir do `Dockerfile`; a validação em PostgreSQL real deve ser executada pelo avaliador
+  conforme a seção 5.
 
 ## 15. Evidências
 
@@ -243,6 +322,7 @@ e `novoUsuarioEmail` automaticamente. Para o replay, a chave é fixa; nos demais
 |---|---|
 | Repositório público | https://github.com/FxlipxDPaula/rdn-api |
 | Swagger local | `http://localhost:8080/swagger-ui.html` |
+| Swagger público | `https://<servico>.onrender.com/swagger-ui.html` — substituir pela URL real após a seção 7.1 |
 | OpenAPI JSON | `http://localhost:8080/v3/api-docs` |
 | Coleção Postman | `postman/rdn-api.postman_collection.json` |
 | Environment Postman | `postman/rdn-api.postman_environment.json` |
@@ -254,6 +334,8 @@ e `novoUsuarioEmail` automaticamente. Para o replay, a chave é fixa; nos demais
 ## 16. Estrutura do projeto
 
 ```text
+Dockerfile        imagem multi-stage usada no deploy (seção 7.1)
+render.yaml       blueprint do Web Service no Render
 src/main/java/com/rdn/rdn_api/
   api/            controllers, DTOs e tratamento de erro (inclui api/user)
   application/    casos de uso e portas (inclui application/user)
