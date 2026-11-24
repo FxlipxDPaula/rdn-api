@@ -367,7 +367,3 @@ src/test/java/    testes unitários e de integração
 documentacao/docs/diagrams/  diagramas do relatorio (PNGs)
 postman/          coleção e environment
 ```
-
-Os geradores dos diagramas e do relatório, o DER em Markdown e os PDFs de relatório são artefatos
-locais de apoio e não fazem parte do repositório. Do material acadêmico, o repositório guarda apenas
-os PNGs em `documentacao/docs/diagrams/`; o PDF final é entregue separadamente.
