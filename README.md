@@ -39,8 +39,6 @@ O domínio não importa JPA. As entidades de persistência ficam em
 - Maven Wrapper incluído (`mvnw` / `mvnw.cmd`) — não é necessário instalar Maven.
 - PostgreSQL 16 ou Docker para o banco real.
 - Portas padrão: `8080` para a API e `5432` para o PostgreSQL.
-- Opcional: Python 3 com `reportlab` e `Pillow` para gerar os diagramas e os relatórios ABNT em
-  `documentacao/docs/`.
 
 > Se o terminal apontar para um JRE antigo, defina `JAVA_HOME` para um JDK 25 antes de rodar o
 > wrapper. Exemplo no Windows:
@@ -198,13 +196,8 @@ vídeo ou validação pontual, não como link permanente no PDF.
 
    Esperado: `status=200`. URL que não responde `200` não entra no PDF.
 
-7. Opcionalmente, gere o PDF citando a URL pública com `RDN_PUBLIC_URL`. Sem a variável, o relatório
-   usa as evidências locais — que é o modo adotado nesta entrega:
-
-   ```bat
-   set "RDN_PUBLIC_URL=https://<seu-servico>.onrender.com"
-   python documentacao/tools/abnt_pdf_final.py
-   ```
+O relatório final já está versionado em `documentacao/docs/projeto-back-end-final-abnt.pdf` e cita as
+evidências locais; publicar a API não exige regerar nada.
 
 O plano gratuito do Render hiberna após ~15 minutos sem tráfego; a primeira requisição após a
 pausa demora ~50 s (cold start). Avise o avaliador ou aqueça a URL antes da correção.
@@ -356,7 +349,7 @@ nos demais cenários, use `{{$guid}}`.
 | Coleção Postman | `postman/rdn-api.postman_collection.json` |
 | Environment Postman | `postman/rdn-api.postman_environment.json` |
 | DER | [`documentacao/docs/DER.md`](documentacao/docs/DER.md) |
-| Diagramas | `documentacao/docs/diagrams/` (PNGs) e `documentacao/tools/render_diagrams.py` |
+| Diagramas | `documentacao/docs/diagrams/` (PNGs) |
 | Relatórios por etapa | `documentacao/docs/etapa-1-*.pdf` a `documentacao/docs/etapa-5-*.pdf` |
 | Relatório final ABNT | `documentacao/docs/projeto-back-end-final-abnt.pdf` |
 
@@ -374,22 +367,9 @@ src/main/resources/
   db/migration/   V1 a V5
   application.properties
 src/test/java/    testes unitários e de integração
-documentacao/     material academico e de apoio (fora do runtime)
 documentacao/docs/      DER, diagramas e relatorios ABNT
-documentacao/plans/     planos das etapas
-documentacao/tools/     geradores de diagramas e PDF ABNT
 postman/          coleção e environment
 ```
 
-### 16.1 Como regenerar os artefatos
-
-Os dados da capa ABNT (`INSTITUTION`, `COURSE` e `RU`) estão em
-[`documentacao/tools/abnt_doc.py`](documentacao/tools/abnt_doc.py:54).
-
-```bash
-python documentacao/tools/render_diagrams.py      # PNGs em documentacao/docs/diagrams/
-python documentacao/tools/abnt_pdf_final.py       # documentacao/docs/projeto-back-end-final-abnt.pdf
-```
-
-No Windows, copie o PDF final para `<RU>_Projeto_Back_End.PDF` no momento da submissão. A cópia
-com RU é ignorada pelo Git e não deve ser versionada.
+Os geradores dos diagramas e do relatório são ferramentas locais de apoio e não fazem parte do
+repositório. O PDF versionado em `documentacao/docs/` é o artefato de referência da entrega.
