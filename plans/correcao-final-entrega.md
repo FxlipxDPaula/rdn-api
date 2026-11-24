@@ -5,16 +5,18 @@ sem depender de decisões pendentes no momento do envio.
 
 ## 1. Diagnóstico verificado (estado atual)
 
+> Verificado em 23/11/2026, após o push de `4ebbbc1`.
+
 | Item | Situação | Evidência |
 |---|---|---|
-| Código e testes | 97 testes, 0 falhas | `.\mvnw.cmd -B -ntp test` → BUILD SUCCESS |
+| Código e testes | 98 testes, 0 falhas | `.\mvnw.cmd -B -ntp test` → BUILD SUCCESS |
 | Wrapper Maven | funciona em clone limpo (baixa Maven 3.10.0, sem jar versionado) | [`.mvn/wrapper/maven-wrapper.properties`](../../.mvn/wrapper/maven-wrapper.properties:2) |
 | Swagger na aplicação | público, sem token | [`SecurityConfig.java`](../../src/main/java/com/rdn/rdn_api/infrastructure/security/SecurityConfig.java:59) |
-| Deploy | artefatos prontos, **não commitados** | [`Dockerfile`](../../Dockerfile:1), [`render.yaml`](../../render.yaml:6) |
+| Deploy | artefatos **commitados** (`299e3a9`); serviço no Render ainda responde `404` (`x-render-routing: no-server`) | [`Dockerfile`](../../Dockerfile:1), [`render.yaml`](../../render.yaml:8) |
 | Config de host | porta via `PORT`, proxy headers, OpenAPI relativo | [`application.properties`](../../src/main/resources/application.properties:5) |
-| README | seção 7.1 criada, URL pública ainda em placeholder | [`README.md`](../../README.md:126) |
-| PDF | 18 páginas, conteúdo completo, **Swagger em localhost** | [`abnt_pdf_final.py`](../../documentacao/tools/abnt_pdf_final.py:361) |
-| Repositório remoto | `origin` correto, mas sem os arquivos novos | [`.git/config`](../../.git/config:12) |
+| README | seção 7.1 com o host do blueprint (`rdn-api.onrender.com`); falta validar o `200` | [`README.md`](../../README.md:171) |
+| PDF | 18 páginas, conteúdo completo, **ainda em modo local** (regenerar após o deploy) | [`abnt_pdf_final.py`](../../documentacao/tools/abnt_pdf_final.py:22) |
+| Repositório remoto | sincronizado em `4ebbbc1` (build, OpenAPI, deploy, config e docs) | [`.git/config`](../../.git/config:12) |
 
 ## 2. Decisões de entrega
 
@@ -38,6 +40,10 @@ flowchart TD
 ```
 
 ## 3. Fase 0 — Congelar o estado e commitar
+
+> **Executado em 23/11/2026.** Foram criados cinco commits (`536ec02`, `be306ec`, `299e3a9`,
+> `f0aa0c0`, `4ebbbc1`) e o `git push origin main` deixou `main` e `origin/main` no mesmo
+> commit. O bloco abaixo fica como referência do agrupamento usado.
 
 Comandos na raiz do projeto:
 
@@ -102,24 +108,26 @@ com os IDs semeados (`...0001` unidade, `...0003` produto, `...00c1` promoção)
 
 ### 6.1 README
 
-- Linha da evidência "Swagger público" ([`README.md`](../../README.md:297)): trocar o placeholder pela URL real.
+- Linha da evidência "Swagger público": placeholder substituído pelo host do blueprint em
+  [`README.md`](../../README.md:325); ainda é preciso confirmar o `200` após o deploy.
 - Seção 6: acrescentar nota de que em Linux/macOS o wrapper pode exigir `chmod +x mvnw`.
 - Seção 12: registrar que, para rodar a coleção contra o deploy, o `baseUrl` do environment deve ser trocado.
 
-### 6.2 Environment Postman público (opcional, alto ganho)
+### 6.2 Environment Postman público (feito)
 
-Novo arquivo `postman/rdn-api.postman_environment.public.json`, cópia do atual com:
+[`rdn-api.postman_environment.public.json`](../../postman/rdn-api.postman_environment.public.json:4)
+criado com `baseUrl = https://rdn-api.onrender.com` (host do blueprint) e os mesmos IDs de seed.
+A coleção tem 29 requisições (T01–T25 do roteiro mais variantes), então o avaliador roda direto no
+deploy. Falta apenas confirmar a URL depois que o serviço existir.
 
-```json
-{ "key": "baseUrl", "value": "https://<URL>", "enabled": true }
-```
+### 6.3 Serviço `api` no Docker Compose (feito)
 
-Assim o avaliador roda os 25 cenários direto no deploy, sem editar nada.
-
-### 6.3 Serviço `api` no Docker Compose (opcional, robustez)
+Implementado atrás do profile `full` em [`docker-compose.yml`](../../docker-compose.yml:23), para não
+conflitar com quem roda a aplicação pelo wrapper:
 
 ```yaml
   api:
+    profiles: ["full"]
     build: .
     ports:
       - "8080:8080"
@@ -133,9 +141,12 @@ Assim o avaliador roda os 25 cenários direto no deploy, sem editar nada.
         condition: service_healthy
 ```
 
-Com isso, quem só tem Docker roda `docker compose up -d --build` e obtém banco + API + Swagger.
+Quem só tem Docker roda `docker compose --profile full up -d --build` e obtém banco + API + Swagger.
 
 ## 7. Fase 4 — Correções no gerador do PDF
+
+> **Aplicado.** Os itens 7.1 a 7.6 já estão no script e o PDF de `documentacao/docs/` foi regenerado
+> (18 páginas). Falta apenas regerar com `RDN_PUBLIC_URL` depois que o deploy responder `200`.
 
 Arquivo único: [`abnt_pdf_final.py`](../../documentacao/tools/abnt_pdf_final.py).
 

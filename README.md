@@ -168,13 +168,24 @@ vídeo ou validação pontual, não como link permanente no PDF.
    `JWT_SECRET` é gerado pelo Render; a porta vem de `PORT` (já lida por
    [`application.properties`](src/main/resources/application.properties:5)).
 4. O Flyway aplica `V1`–`V5` no primeiro boot. Acompanhe o log até `Started RdnApiApplication`.
-5. Swagger público: `https://<servico>.onrender.com/swagger-ui.html` e
-   `https://<servico>.onrender.com/v3/api-docs`. O `healthCheckPath` do blueprint usa
-   `/v3/api-docs`, que é público no `SecurityConfig`.
-6. Com a URL respondendo `200`, gere o PDF já com a URL embutida na tabela de evidências:
+5. Swagger público: o blueprint declara o serviço `rdn-api`, então as rotas esperadas são
+   `https://rdn-api.onrender.com/swagger-ui.html` e
+   `https://rdn-api.onrender.com/v3/api-docs`. O `healthCheckPath` do blueprint usa
+   `/v3/api-docs`, que é público no `SecurityConfig`. Se o Render gerar outro subdomínio
+   (nome já em uso), ajuste as duas URLs abaixo e o environment público do Postman.
+6. Confirme o deploy **antes** de gerar o PDF:
 
    ```bat
-   set "RDN_PUBLIC_URL=https://<servico>.onrender.com"
+   curl -s -o NUL -w "status=%{http_code}" https://rdn-api.onrender.com/v3/api-docs
+   ```
+
+   Esperado: `status=200`. Sem esse `200` o link continua inválido e o PDF não deve ser
+   regenerado, porque a tabela de evidências ficaria apontando para uma URL morta.
+
+7. Com a URL validada, gere o PDF já com a URL embutida na tabela de evidências:
+
+   ```bat
+   set "RDN_PUBLIC_URL=https://rdn-api.onrender.com"
    python documentacao/tools/abnt_pdf_final.py
    ```
 
@@ -321,9 +332,10 @@ e `novoUsuarioEmail` automaticamente. Para o replay, a chave é fixa; nos demais
 | Evidência | Onde |
 |---|---|
 | Repositório público | https://github.com/FxlipxDPaula/rdn-api |
-| Swagger local | `http://localhost:8080/swagger-ui.html` |
-| Swagger público | `https://<servico>.onrender.com/swagger-ui.html` — substituir pela URL real após a seção 7.1 |
-| OpenAPI JSON | `http://localhost:8080/v3/api-docs` |
+| Swagger local | `http://localhost:8080/swagger-ui.html` (após executar a seção 6) |
+| Swagger público | `https://rdn-api.onrender.com/swagger-ui.html` — host definido no [`render.yaml`](render.yaml:8); validar com `curl` antes da entrega (seção 7.1) |
+| OpenAPI JSON local | `http://localhost:8080/v3/api-docs` |
+| OpenAPI JSON público | `https://rdn-api.onrender.com/v3/api-docs` — mesmo host do Swagger público |
 | Coleção Postman | `postman/rdn-api.postman_collection.json` |
 | Environment Postman | `postman/rdn-api.postman_environment.json` |
 | DER | [`documentacao/docs/DER.md`](documentacao/docs/DER.md) |
